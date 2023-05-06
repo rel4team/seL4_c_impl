@@ -142,28 +142,28 @@
 
 //     restore_user_context();
 //     UNREACHABLE();
+// } 
+
+// void VISIBLE NORETURN slowpath(syscall_t syscall)
+// { 
+//     if (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
+// #ifdef TRACK_KERNEL_ENTRIES
+//         ksKernelEntry.path = Entry_UnknownSyscall;
+// #endif /* TRACK_KERNEL_ENTRIES */
+//         /* Contrary to the name, this handles all non-standard syscalls used in
+//          * debug builds also.
+//          */
+//         handleUnknownSyscall(syscall);
+//     } else {
+// #ifdef TRACK_KERNEL_ENTRIES
+//         ksKernelEntry.is_fastpath = 0;
+// #endif /* TRACK KERNEL ENTRIES */
+//         handleSyscall(syscall);
+//     }
+
+//     restore_user_context();
+//     UNREACHABLE();
 // }
-
-void VISIBLE NORETURN slowpath(syscall_t syscall)
-{
-    if (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
-#ifdef TRACK_KERNEL_ENTRIES
-        ksKernelEntry.path = Entry_UnknownSyscall;
-#endif /* TRACK_KERNEL_ENTRIES */
-        /* Contrary to the name, this handles all non-standard syscalls used in
-         * debug builds also.
-         */
-        handleUnknownSyscall(syscall);
-    } else {
-#ifdef TRACK_KERNEL_ENTRIES
-        ksKernelEntry.is_fastpath = 0;
-#endif /* TRACK KERNEL ENTRIES */
-        handleSyscall(syscall);
-    }
-
-    restore_user_context();
-    UNREACHABLE();
-}
 
 #ifdef CONFIG_FASTPATH
 ALIGN(L1_CACHE_LINE_SIZE)
@@ -205,16 +205,16 @@ void VISIBLE c_handle_fastpath_call(word_t cptr, word_t msgInfo)
 }
 #endif
 
-void VISIBLE NORETURN c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall)
-{
-    NODE_LOCK_SYS;
+// void VISIBLE NORETURN c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall)
+// {
+//     NODE_LOCK_SYS;
 
-    c_entry_hook();
-#ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, syscall);
-    ksKernelEntry.is_fastpath = 0;
-#endif /* DEBUG */
-    slowpath(syscall);
+//     c_entry_hook();
+// #ifdef TRACK_KERNEL_ENTRIES
+//     benchmark_debug_syscall_start(cptr, msgInfo, syscall);
+//     ksKernelEntry.is_fastpath = 0;
+// #endif /* DEBUG */
+//     slowpath(syscall);
 
-    UNREACHABLE();
-}
+//     UNREACHABLE();
+// }
