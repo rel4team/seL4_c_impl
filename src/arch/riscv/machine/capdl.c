@@ -82,7 +82,7 @@ static void riscv_cap_pt_print_slots(pte_t *upperPtSlot, word_t ptIndex, int lev
 
 void obj_vtable_print_slots(tcb_t *tcb)
 {
-    if (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+    if (isValidVTableRoot((cap_t*)&TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
         pte_t *lvl1pt = PTE_PTR(pptr_of_cap(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
         add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
         riscv_cap_pt_print_slots(lvl1pt, 0, CONFIG_PT_LEVELS);
@@ -215,7 +215,7 @@ static void riscv_obj_pt_print_slots(pte_t *lvl1pt, pte_t *pt, int level)
 
 void obj_tcb_print_vtable(tcb_t *tcb)
 {
-    if (isValidVTableRoot(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
+    if (isValidVTableRoot((cap_t*)&TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap) && !seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap)) {
         add_to_seen(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap);
         pte_t *lvl1pt = PTE_PTR(pptr_of_cap(TCB_PTR_CTE_PTR(tcb, tcbVTable)->cap));
         printf("%p_pd = pt\n", lvl1pt);

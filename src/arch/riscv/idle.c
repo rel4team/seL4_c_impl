@@ -8,24 +8,32 @@
 #include <config.h>
 #include <arch/sbi.h>
 
-void idle_thread(void)
-{
-    while (1) {
-        asm volatile("wfi");
-    }
-}
+extern void idle_thread(void);
 
 /** DONT_TRANSLATE */
-void VISIBLE NO_INLINE halt(void)
-{
-#ifdef CONFIG_PRINTING
-    printf("halting...");
-#ifdef CONFIG_DEBUG_BUILD
-    debug_printKernelEntryReason();
-#endif /* CONFIG_DEBUG_BUILD */
-#endif /* CONFIG_PRINTING */
+extern void VISIBLE NO_INLINE halt(void);
 
-    sbi_shutdown();
+// string.c
+extern word_t strnlen(const char *s, word_t maxlen);
 
-    UNREACHABLE();
-}
+// void idle_thread(void)
+// {
+//     while (1) {
+//         asm volatile("wfi");
+//     }
+// }
+
+// /** DONT_TRANSLATE */
+// void VISIBLE NO_INLINE halt(void)
+// {
+// #ifdef CONFIG_PRINTING
+//     printf("halting...");
+// #ifdef CONFIG_DEBUG_BUILD
+//     debug_printKernelEntryReason();
+// #endif /* CONFIG_DEBUG_BUILD */
+// #endif /* CONFIG_PRINTING */
+
+//     sbi_shutdown();
+
+//     UNREACHABLE();
+// }

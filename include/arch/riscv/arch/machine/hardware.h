@@ -90,29 +90,31 @@ enum vm_page_size {
 };
 typedef word_t vm_page_size_t;
 
-static inline word_t CONST pageBitsForSize(vm_page_size_t pagesize)
-{
-    switch (pagesize) {
-    case RISCV_4K_Page:
-        return RISCVPageBits;
 
-    case RISCV_Mega_Page:
-        return RISCVMegaPageBits;
+word_t CONST pageBitsForSize(vm_page_size_t pagesize);
+// static inline word_t CONST pageBitsForSize(vm_page_size_t pagesize)
+// {
+//     switch (pagesize) {
+//     case RISCV_4K_Page:
+//         return RISCVPageBits;
 
-#if CONFIG_PT_LEVELS > 2
-    case RISCV_Giga_Page:
-        return RISCVGigaPageBits;
-#endif
+//     case RISCV_Mega_Page:
+//         return RISCVMegaPageBits;
 
-#if CONFIG_PT_LEVELS > 3
-    case RISCV_Tera_Page:
-        return RISCVTeraPageBits;
-#endif
+// #if CONFIG_PT_LEVELS > 2
+//     case RISCV_Giga_Page:
+//         return RISCVGigaPageBits;
+// #endif
 
-    default:
-        fail("Invalid page size");
-    }
-}
+// #if CONFIG_PT_LEVELS > 3
+//     case RISCV_Tera_Page:
+//         return RISCVTeraPageBits;
+// #endif
+
+//     default:
+//         fail("Invalid page size");
+//     }
+// }
 
 static inline void arch_clean_invalidate_caches(void)
 {

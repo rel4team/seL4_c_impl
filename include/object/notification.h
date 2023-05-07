@@ -10,7 +10,7 @@
 #include <object/structures.h>
 
 void sendSignal(notification_t *ntfnPtr, word_t badge);
-void receiveSignal(tcb_t *thread, cap_t cap, bool_t isBlocking);
+void receiveSignal(tcb_t *thread, cap_t* cap, bool_t isBlocking);
 void cancelAllSignals(notification_t *ntfnPtr);
 void cancelSignal(tcb_t *threadPtr, notification_t *ntfnPtr);
 void completeSignal(notification_t *ntfnPtr, tcb_t *tcb);

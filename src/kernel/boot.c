@@ -18,10 +18,10 @@
 #include <util.h>
 
 /* (node-local) state accessed only during bootstrapping */
-BOOT_BSS ndks_boot_t ndks_boot;
+extern BOOT_BSS ndks_boot_t ndks_boot;
 
-BOOT_BSS rootserver_mem_t rootserver;
-BOOT_BSS static region_t rootserver_mem;
+extern BOOT_BSS rootserver_mem_t rootserver;
+extern BOOT_BSS region_t rootserver_mem;
 
 BOOT_CODE static void merge_regions(void)
 {
@@ -326,7 +326,7 @@ BOOT_CODE void populate_bi_frame(node_id_t node_id, word_t num_nodes,
     /* clear boot info memory */
     clearMemory((void *)rootserver.boot_info, BI_FRAME_SIZE_BITS);
     if (extra_bi_size) {
-        clearMemory((void *)rootserver.extra_bi,
+        clearMemory((void *)rootserver.extra_bi, 
                     calculate_extra_bi_size_bits(extra_bi_size));
     }
 
@@ -411,7 +411,7 @@ BOOT_CODE cap_t create_it_asid_pool(cap_t root_cnode_cap)
     return ap_cap;
 }
 
-#ifdef CONFIG_KERNEL_MCS
+#ifdef CONFIG_KERNEL_MCS 
 BOOT_CODE static void configure_sched_context(tcb_t *tcb, sched_context_t *sc_pptr, ticks_t timeslice)
 {
     tcb->tcbSchedContext = sc_pptr;
@@ -477,28 +477,28 @@ BOOT_CODE tcb_t *create_initial_thread(cap_t root_cnode_cap, cap_t it_pd_cap, vp
     Arch_initContext(&tcb->tcbArch.tcbContext);
 
     /* derive a copy of the IPC buffer cap for inserting */
-    deriveCap_ret_t dc_ret = deriveCap(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadIPCBuffer), ipcbuf_cap);
+    deriveCap_ret_t dc_ret = deriveCap(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadIPCBuffer),(cap_t*)& ipcbuf_cap);
     if (dc_ret.status != EXCEPTION_NONE) {
         printf("Failed to derive copy of IPC Buffer\n");
         return NULL;
     }
 
-    /* initialise TCB (corresponds directly to abstract specification) */
-    cteInsert(
-        root_cnode_cap,
-        SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadCNode),
-        SLOT_PTR(rootserver.tcb, tcbCTable)
-    );
-    cteInsert(
-        it_pd_cap,
-        SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadVSpace),
-        SLOT_PTR(rootserver.tcb, tcbVTable)
-    );
-    cteInsert(
-        dc_ret.cap,
-        SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadIPCBuffer),
-        SLOT_PTR(rootserver.tcb, tcbBuffer)
-    );
+    // /* initialise TCB (corresponds directly to abstract specification) */
+    // cteInsert(
+    //     root_cnode_cap,
+    //     SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadCNode),
+    //     SLOT_PTR(rootserver.tcb, tcbCTable)
+    // );
+    // cteInsert(
+    //     it_pd_cap,
+    //     SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadVSpace),
+    //     SLOT_PTR(rootserver.tcb, tcbVTable)
+    // );
+    // cteInsert(
+    //     dc_ret.cap,
+    //     SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadIPCBuffer),
+    //     SLOT_PTR(rootserver.tcb, tcbBuffer)
+    // );
     tcb->tcbIPCBuffer = ipcbuf_vptr;
 
     setRegister(tcb, capRegister, bi_frame_vptr);
@@ -562,7 +562,7 @@ BOOT_CODE void clock_sync_test(void)
            (int)getCurrentCPUIndex(), t0, t, t - t0);
     assert(t0 <= margin + t && t <= t0 + margin);
 }
-#endif
+#endif 
 
 BOOT_CODE void init_core_state(tcb_t *scheduler_action)
 {
@@ -749,7 +749,7 @@ BOOT_CODE bool_t create_untypeds(cap_t root_cnode_cap,
         if (start < ndks_boot.reserved[i].start) {
             region_t reg = paddr_to_pptr_reg((p_region_t) {
                 start, ndks_boot.reserved[i].start
-            });
+            }); 
             if (!create_untypeds_for_region(root_cnode_cap, true, reg, first_untyped_slot)) {
                 printf("ERROR: creation of untypeds for device region #%u at"
                        " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"] failed\n",
@@ -832,14 +832,14 @@ BOOT_CODE static bool_t check_available_memory(word_t n_available,
 
     printf("available phys memory regions: %"SEL4_PRIu_word"\n", n_available);
     /* Force ordering and exclusivity of available regions. */
-    for (word_t i = 0; i < n_available; i++) {
+    for (word_t i = 0; i < n_available; i++) { 
         const p_region_t *r = &available[i];
         printf("  [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"]\n", r->start, r->end);
 
         /* Available regions must be sane */
         if (r->start > r->end) {
             printf("ERROR: memory region %"SEL4_PRIu_word" has start > end\n", i);
-            return false;
+            return false; 
         }
 
         /* Available regions can't be empty. */

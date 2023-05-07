@@ -229,13 +229,15 @@ static inline vm_rights_t CONST vmRightsFromWord(word_t w)
     return (vm_rights_t)w;
 }
 
-static inline vm_attributes_t CONST vmAttributesFromWord(word_t w)
-{
-    vm_attributes_t attr;
+vm_attributes_t CONST vmAttributesFromWord(word_t w);
 
-    attr.words[0] = w;
-    return attr;
-}
+// static inline vm_attributes_t CONST vmAttributesFromWord(word_t w)
+// {
+//     vm_attributes_t attr;
+
+//     attr.words[0] = w;
+//     return attr;
+// }
 
 #ifdef CONFIG_KERNEL_MCS
 typedef struct sched_context sched_context_t;
