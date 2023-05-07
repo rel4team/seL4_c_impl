@@ -62,7 +62,7 @@ BOOT_CODE void map_kernel_devices(void)
  * are for user level, and also call plic_complete_claim for seL4_IRQHandler_Ack.
  */
 
-static irq_t active_irq[CONFIG_MAX_NUM_NODES];
+extern irq_t active_irq[CONFIG_MAX_NUM_NODES];
 
 
 /**
@@ -81,59 +81,60 @@ static irq_t active_irq[CONFIG_MAX_NUM_NODES];
  *
  * @return     The active irq or irqInvalid.
  */
-static inline irq_t getActiveIRQ(void)
-{
-    irq_t *active_irq_slot = &active_irq[CURRENT_CPU_INDEX()];
+irq_t getActiveIRQ(void);
+// static inline irq_t getActiveIRQ(void)
+// {
+//     irq_t *active_irq_slot = &active_irq[CURRENT_CPU_INDEX()];
+ 
+//     /* If an interrupt is currently active, then return it. */
+//     irq_t irq = *active_irq_slot;
+//     if (IS_IRQ_VALID(irq)) {
+//         return irq;
+//     }
 
-    /* If an interrupt is currently active, then return it. */
-    irq_t irq = *active_irq_slot;
-    if (IS_IRQ_VALID(irq)) {
-        return irq;
-    }
+//     /* No interrupt currently active, find a new one from the sources. The
+//      * priorities are: external -> software -> timer.
+//      */
+//     word_t sip = read_sip();
+//     if (sip & BIT(SIP_SEIP)) {
+//         /* Even if we say an external interrupt is pending, the PLIC may not
+//          * return any pending interrupt here in some corner cases. A level
+//          * triggered interrupt might have been deasserted again or another hard
+//          * has claimed it in a multicore system.
+//          */
+//         irq = plic_get_claim();
+// #ifdef CONFIG_PLAT_QEMU_RISCV_VIRT
+//         /* QEMU bug requires external interrupts to be immediately claimed. For
+//          * other platforms, the claim is done in invokeIRQHandler_AckIRQ.
+//          */
+//         plic_complete_claim(irq);
+// #endif
+// #ifdef ENABLE_SMP_SUPPORT
+//     } else if (sip & BIT(SIP_SSIP)) {
+//         sbi_clear_ipi();
+//         irq = ipi_get_irq();
+// #endif
+//     } else if (sip & BIT(SIP_STIP)) {
+//         irq = KERNEL_TIMER_IRQ;
+//     } else {
+//         /* Seems none of the known sources has a pending interrupt. This can
+//          * happen if e.g. if another hart context has claimed the interrupt
+//          * already.
+//          */
+//         irq = irqInvalid;
+//     }
 
-    /* No interrupt currently active, find a new one from the sources. The
-     * priorities are: external -> software -> timer.
-     */
-    word_t sip = read_sip();
-    if (sip & BIT(SIP_SEIP)) {
-        /* Even if we say an external interrupt is pending, the PLIC may not
-         * return any pending interrupt here in some corner cases. A level
-         * triggered interrupt might have been deasserted again or another hard
-         * has claimed it in a multicore system.
-         */
-        irq = plic_get_claim();
-#ifdef CONFIG_PLAT_QEMU_RISCV_VIRT
-        /* QEMU bug requires external interrupts to be immediately claimed. For
-         * other platforms, the claim is done in invokeIRQHandler_AckIRQ.
-         */
-        plic_complete_claim(irq);
-#endif
-#ifdef ENABLE_SMP_SUPPORT
-    } else if (sip & BIT(SIP_SSIP)) {
-        sbi_clear_ipi();
-        irq = ipi_get_irq();
-#endif
-    } else if (sip & BIT(SIP_STIP)) {
-        irq = KERNEL_TIMER_IRQ;
-    } else {
-        /* Seems none of the known sources has a pending interrupt. This can
-         * happen if e.g. if another hart context has claimed the interrupt
-         * already.
-         */
-        irq = irqInvalid;
-    }
+//     /* There is no guarantee that there is a new interrupt. */
+//     if (!IS_IRQ_VALID(irq)) {
+//         /* Sanity check: the slot can't hold an interrupt either. */
+//         assert(!IS_IRQ_VALID(*active_irq_slot));
+//         return irqInvalid;
+//     }
 
-    /* There is no guarantee that there is a new interrupt. */
-    if (!IS_IRQ_VALID(irq)) {
-        /* Sanity check: the slot can't hold an interrupt either. */
-        assert(!IS_IRQ_VALID(*active_irq_slot));
-        return irqInvalid;
-    }
-
-    /* A new interrupt is active, remember it. */
-    *active_irq_slot = irq;
-    return irq;
-}
+//     /* A new interrupt is active, remember it. */
+//     *active_irq_slot = irq;
+//     return irq;
+// }
 
 #ifdef HAVE_SET_TRIGGER
 /**
@@ -205,33 +206,34 @@ static inline void maskInterrupt(bool_t disable, irq_t irq)
  *
  * @param[in]  irq   The irq
  */
-static inline void ackInterrupt(irq_t irq)
-{
-    assert(IS_IRQ_VALID(irq));
-    active_irq[CURRENT_CPU_INDEX()] = irqInvalid;
+// void ackInterrupt(irq_t irq)
+// {
+//     assert(IS_IRQ_VALID(irq));
+//     active_irq[CURRENT_CPU_INDEX()] = irqInvalid;
 
-    if (irq == KERNEL_TIMER_IRQ) {
-        /* Reprogramming the timer has cleared the interrupt. */
-        return;
-    }
-#ifdef ENABLE_SMP_SUPPORT
-    if (irq == irq_reschedule_ipi || irq == irq_remote_call_ipi) {
-        ipi_clear_irq(irq);
-    }
-#endif
-}
+//     if (irq == KERNEL_TIMER_IRQ) {
+//         /* Reprogramming the timer has cleared the interrupt. */
+//         return;
+//     }
+// #ifdef ENABLE_SMP_SUPPORT
+//     if (irq == irq_reschedule_ipi || irq == irq_remote_call_ipi) {
+//         ipi_clear_irq(irq);
+//     }
+// #endif
+// }
 
 #ifndef CONFIG_KERNEL_MCS
-void resetTimer(void)
-{
-    uint64_t target;
-    // repeatedly try and set the timer in a loop as otherwise there is a race and we
-    // may set a timeout in the past, resulting in it never getting triggered
-    do {
-        target = riscv_read_time() + RESET_CYCLES;
-        sbi_set_timer(target);
-    } while (riscv_read_time() > target);
-}
+void resetTimer(void);
+// void resetTimer(void)
+// {
+//     uint64_t target;
+//     // repeatedly try and set the timer in a loop as otherwise there is a race and we
+//     // may set a timeout in the past, resulting in it never getting triggered
+//     do {
+//         target = riscv_read_time() + RESET_CYCLES;
+//         sbi_set_timer(target);
+//     } while (riscv_read_time() > target);
+// }
 
 /**
    DONT_TRANSLATE
@@ -254,21 +256,22 @@ BOOT_CODE void initLocalIRQController(void)
     set_sie_mask(BIT(SIE_SEIE) | BIT(SIE_STIE) | SMP_TERNARY(BIT(SIE_SSIE), 0));
 }
 
-BOOT_CODE void initIRQController(void)
-{
-    printf("Initializing PLIC...\n");
+extern void initIRQController(irq_t*,int);
+// BOOT_CODE void initIRQController(void)
+// {
+//     printf("Initializing PLIC...\n");
 
-    /* Initialize active_irq[] properly to stick to the semantics and play safe.
-     * Effectively this is not needed if irqInvalid is zero (which is currently
-     * the case) and the array is in the BSS, that is filled with zeros (which
-     * the a kernel loader is supposed to do and which the ELF-Loader does).
-     */
-    for (word_t i = 0; i < ARRAY_SIZE(active_irq); i++) {
-        active_irq[i] = irqInvalid;
-    }
+//     /* Initialize active_irq[] properly to stick to the semantics and play safe.
+//      * Effectively this is not needed if irqInvalid is zero (which is currently
+//      * the case) and the array is in the BSS, that is filled with zeros (which
+//      * the a kernel loader is supposed to do and which the ELF-Loader does).
+//      */
+//     for (word_t i = 0; i < ARRAY_SIZE(active_irq); i++) {
+//         active_irq[i] = irqInvalid;
+//     }
 
-    plic_init_controller();
-}
+//     plic_init_controller();
+// }
 
 static inline void handleSpuriousIRQ(void)
 {

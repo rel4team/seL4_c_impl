@@ -149,7 +149,7 @@ static inline void hwASIDFlush(asid_t asid)
 #endif /* end of !ENABLE_SMP_SUPPORT */
 
 word_t PURE getRestartPC(tcb_t *thread);
-void setNextPC(tcb_t *thread, word_t v);
+void setNextPC(tcb_t *thread, word_t v); 
 
 /* Cleaning memory before user-level access */
 static inline void clearMemory(void *ptr, unsigned int bits)
@@ -270,7 +270,7 @@ void map_kernel_devices(void);
 /** MODIFIES: [*] */
 void initTimer(void);
 void initLocalIRQController(void);
-void initIRQController(void);
+void initIRQController(irq_t*,int);
 void setIRQTrigger(irq_t irq, bool_t trigger);
 
 #ifdef ENABLE_SMP_SUPPORT

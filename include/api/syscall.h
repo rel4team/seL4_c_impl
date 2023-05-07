@@ -35,15 +35,17 @@ exception_t handleUnknownSyscall(word_t w);
 exception_t handleUserLevelFault(word_t w_a, word_t w_b);
 exception_t handleVMFaultEvent(vm_fault_type_t vm_faultType);
 
-static inline word_t PURE getSyscallArg(word_t i, word_t *ipc_buffer)
-{
-    if (i < n_msgRegisters) {
-        return getRegister(NODE_STATE(ksCurThread), msgRegisters[i]);
-    }
 
-    assert(ipc_buffer != NULL);
-    return ipc_buffer[i + 1];
-}
+word_t PURE getSyscallArg(word_t i, word_t *ipc_buffer);
+// static inline word_t PURE getSyscallArg(word_t i, word_t *ipc_buffer)
+// {
+//     if (i < n_msgRegisters) {
+//         return getRegister(NODE_STATE(ksCurThread), msgRegisters[i]);
+//     }
+
+//     assert(ipc_buffer != NULL);
+//     return ipc_buffer[i + 1];
+// }
 
 extern extra_caps_t current_extra_caps;
 

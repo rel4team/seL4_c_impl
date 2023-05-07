@@ -27,7 +27,7 @@
 #define seL4_TCBBits            11
 #else
 #define seL4_TCBBits            10
-#endif
+#endif 
 
 /* Sv39/Sv48 pages/ptes sizes */
 #define seL4_PageTableEntryBits 3

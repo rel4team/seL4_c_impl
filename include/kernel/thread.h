@@ -37,7 +37,7 @@ static inline CONST word_t l1index_to_prio(word_t l1index)
 }
 
 static inline bool_t PURE isRunnable(const tcb_t *thread)
-{
+{ 
     switch (thread_state_get_tsType(thread->tcbState)) {
     case ThreadState_Running:
     case ThreadState_Restart:
@@ -109,6 +109,7 @@ static inline bool_t PURE isStopped(const tcb_t *thread)
     }
 }
 
+void nextDomain(void);
 #ifdef CONFIG_KERNEL_MCS
 static inline bool_t PURE isRoundRobin(sched_context_t *sc)
 {
@@ -166,10 +167,10 @@ void Arch_configureIdleThread(tcb_t *tcb);
 void Arch_activateIdleThread(tcb_t *tcb);
 
 void idle_thread(void);
-
+void parserTcb(tcb_t* t);
 void configureIdleThread(tcb_t *tcb);
 void activateThread(void);
-void suspend(tcb_t *target);
+void suspend(tcb_t *target);  
 void restart(tcb_t *target);
 void doIPCTransfer(tcb_t *sender, endpoint_t *endpoint,
                    word_t badge, bool_t grant, tcb_t *receiver);

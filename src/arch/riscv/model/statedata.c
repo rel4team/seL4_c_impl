@@ -15,13 +15,13 @@
 #include <plat/machine/hardware.h>
 
 /* The top level asid mapping table */
-asid_pool_t *riscvKSASIDTable[BIT(asidHighBits)];
+extern asid_pool_t *riscvKSASIDTable[BIT(asidHighBits)];
 
 /* Kernel Page Tables */
-pte_t kernel_root_pageTable[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
+extern pte_t kernel_root_pageTable[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
 
 #if __riscv_xlen != 32
-pte_t kernel_image_level2_pt[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
+extern pte_t kernel_image_level2_pt[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
 pte_t kernel_image_level2_dev_pt[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
 #elif defined(CONFIG_KERNEL_LOG_BUFFER)
 pte_t kernel_image_level2_log_buffer_pt[BIT(PT_INDEX_BITS)] ALIGN_BSS(BIT(seL4_PageTableBits));
