@@ -689,7 +689,7 @@ add_custom_target(kernel_all_pp_wrapper DEPENDS kernel_all_pp.c)
 
 add_custom_target(kernel_theories DEPENDS ${theories_deps})
 
-link_directories(/home/ctrlz/workSpace/rel4/sel4test/rel4_kernel/target/riscv64imac-unknown-none-elf/release)
+link_directories(../rel4_kernel/target/riscv64imac-unknown-none-elf/release)
 # Declare final kernel output
 add_executable(kernel.elf EXCLUDE_FROM_ALL ${asm_sources} kernel_all.c)
 target_include_directories(kernel.elf PRIVATE ${config_dir})
