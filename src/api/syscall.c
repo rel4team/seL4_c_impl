@@ -80,6 +80,11 @@ exception_t handleUnknownSyscall(word_t w)
         kernel_putchar(getRegister(NODE_STATE(ksCurThread), capRegister));
         return EXCEPTION_NONE;
     }
+    if (w == SysGetClock) {
+        uint64_t current = riscv_read_time();
+        setRegister(NODE_STATE(ksCurThread), capRegister, current);
+        return EXCEPTION_NONE;
+    }
     if (w == SysDebugDumpScheduler)
     {
 #ifdef CONFIG_DEBUG_BUILD
