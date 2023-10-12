@@ -28,7 +28,7 @@
 #define OFFSET_TO_FREE_INDEX(offset) ((offset)>>seL4_MinUntypedBits)
 
 exception_t decodeUntypedInvocation(word_t invLabel, word_t length,
-                                    cte_t *slot, cap_t* cap,
+                                    cte_t *slot, cap_t cap,
                                     bool_t call, word_t *buffer);
 exception_t invokeUntyped_Retype(cte_t *srcSlot, bool_t reset,
                                  void *retypeBase, object_t newType, word_t userSize,

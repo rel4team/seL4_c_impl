@@ -43,31 +43,28 @@ enum ctLimits {
     capTransferDataSize = 3
 };
 
-seL4_CapRights_t CONST rightsFromWord(word_t w);
-// static inline seL4_CapRights_t CONST rightsFromWord(word_t w)
-// {
-//     seL4_CapRights_t seL4_CapRights;
+static inline seL4_CapRights_t CONST rightsFromWord(word_t w)
+{
+    seL4_CapRights_t seL4_CapRights;
 
-//     seL4_CapRights.words[0] = w;
-//     return seL4_CapRights;
-// }
+    seL4_CapRights.words[0] = w;
+    return seL4_CapRights;
+}
 
 static inline word_t CONST wordFromRights(seL4_CapRights_t seL4_CapRights)
 {
     return seL4_CapRights.words[0] & MASK(seL4_CapRightsBits);
 }
 
+static inline cap_transfer_t PURE capTransferFromWords(word_t *wptr)
+{
+    cap_transfer_t transfer;
 
-cap_transfer_t PURE capTransferFromWords(word_t *wptr);
-// static inline cap_transfer_t PURE capTransferFromWords(word_t *wptr)
-// {
-//     cap_transfer_t transfer;
-
-//     transfer.ctReceiveRoot  = (cptr_t)wptr[0];
-//     transfer.ctReceiveIndex = (cptr_t)wptr[1];
-//     transfer.ctReceiveDepth = wptr[2];
-//     return transfer;
-// }
+    transfer.ctReceiveRoot  = (cptr_t)wptr[0];
+    transfer.ctReceiveIndex = (cptr_t)wptr[1];
+    transfer.ctReceiveDepth = wptr[2];
+    return transfer;
+}
 
 static inline seL4_MessageInfo_t CONST messageInfoFromWord_raw(word_t w)
 {
@@ -144,5 +141,4 @@ extern struct debug_syscall_error current_debug_error;
 #else /* !CONFIG_PRINTING */
 #define userError(...)
 #endif
-
 

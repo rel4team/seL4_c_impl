@@ -95,7 +95,7 @@ static inline void maskInterrupt(bool_t disable, irq_t irq);
  *
  * @param[in]  irq   irq to ack
  */
- void ackInterrupt(irq_t irq);
+static inline void ackInterrupt(irq_t irq);
 
 /**
  * Called when getActiveIRQ returns irqInvalid while the kernel is handling an

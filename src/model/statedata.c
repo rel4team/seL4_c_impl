@@ -21,9 +21,9 @@ SMP_STATE_DEFINE(smpStatedata_t, ksSMP[CONFIG_MAX_NUM_NODES] ALIGN(L1_CACHE_LINE
 word_t ksNumCPUs;
 
 /* Pointer to the head of the scheduler queue for each priority */
- extern UP_STATE_DEFINE(tcb_queue_t, ksReadyQueues[NUM_READY_QUEUES]);
- extern UP_STATE_DEFINE(word_t, ksReadyQueuesL1Bitmap[CONFIG_NUM_DOMAINS]);
- extern UP_STATE_DEFINE(word_t, ksReadyQueuesL2Bitmap[CONFIG_NUM_DOMAINS][L2_BITMAP_SIZE]);
+UP_STATE_DEFINE(tcb_queue_t, ksReadyQueues[NUM_READY_QUEUES]);
+UP_STATE_DEFINE(word_t, ksReadyQueuesL1Bitmap[CONFIG_NUM_DOMAINS]);
+UP_STATE_DEFINE(word_t, ksReadyQueuesL2Bitmap[CONFIG_NUM_DOMAINS][L2_BITMAP_SIZE]);
 compile_assert(ksReadyQueuesL1BitmapBigEnough, (L2_BITMAP_SIZE - 1) <= wordBits)
 #ifdef CONFIG_KERNEL_MCS
 /* Head of the queue of threads waiting for their budget to be replenished */
@@ -31,15 +31,15 @@ UP_STATE_DEFINE(tcb_t *, ksReleaseHead);
 #endif
 
 /* Current thread TCB pointer */
-extern UP_STATE_DEFINE(tcb_t *, ksCurThread);
+UP_STATE_DEFINE(tcb_t *, ksCurThread);
 
 /* Idle thread TCB pointer */
-extern UP_STATE_DEFINE(tcb_t *, ksIdleThread);
+UP_STATE_DEFINE(tcb_t *, ksIdleThread);
 
 /* Values of 0 and ~0 encode ResumeCurrentThread and ChooseNewThread
  * respectively; other values encode SwitchToThread and must be valid
  * tcb pointers */
-extern UP_STATE_DEFINE(tcb_t *, ksSchedulerAction);
+UP_STATE_DEFINE(tcb_t *, ksSchedulerAction);
 
 #ifdef CONFIG_HAVE_FPU
 /* Currently active FPU state, or NULL if there is no active FPU state */
@@ -73,32 +73,32 @@ UP_STATE_DEFINE(timestamp_t, benchmark_kernel_number_schedules);
 
 /* Units of work we have completed since the last time we checked for
  * pending interrupts */
- extern word_t ksWorkUnitsCompleted;
+word_t ksWorkUnitsCompleted;
 
-extern irq_state_t intStateIRQTable[INT_STATE_ARRAY_SIZE];
+irq_state_t intStateIRQTable[INT_STATE_ARRAY_SIZE];
 /* CNode containing interrupt handler endpoints - like all seL4 objects, this CNode needs to be
  * of a size that is a power of 2 and aligned to its size. */
 cte_t intStateIRQNode[BIT(IRQ_CNODE_SLOT_BITS)] ALIGN(BIT(IRQ_CNODE_SLOT_BITS + seL4_SlotBits));
 compile_assert(irqCNodeSize, sizeof(intStateIRQNode) >= ((INT_STATE_ARRAY_SIZE) *sizeof(cte_t)));
 
 /* Currently active domain */
-extern dom_t ksCurDomain;
+dom_t ksCurDomain;
 
 /* Domain timeslice remaining */
 #ifdef CONFIG_KERNEL_MCS
 ticks_t ksDomainTime;
 #else
-extern word_t ksDomainTime;
+word_t ksDomainTime;
 #endif
 
 /* An index into ksDomSchedule for active domain and length. */
-extern word_t ksDomScheduleIdx;
+word_t ksDomScheduleIdx;
 
 /* Only used by lockTLBEntry */
 word_t tlbLockCount = 0;
 
 /* Idle thread. */
-extern SECTION("._idle_thread") char ksIdleThreadTCB[CONFIG_MAX_NUM_NODES][BIT(seL4_TCBBits)] ALIGN(BIT(TCB_SIZE_BITS));
+SECTION("._idle_thread") char ksIdleThreadTCB[CONFIG_MAX_NUM_NODES][BIT(seL4_TCBBits)] ALIGN(BIT(TCB_SIZE_BITS));
 
 #ifdef CONFIG_KERNEL_MCS
 /* Idle thread Schedcontexts */

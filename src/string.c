@@ -8,12 +8,12 @@
 #include <assert.h>
 #include <string.h>
 
-// word_t strnlen(const char *s, word_t maxlen)
-// {
-//     word_t len;
-//     for (len = 0; len < maxlen && s[len]; len++);
-//     return len;
-// }
+word_t strnlen(const char *s, word_t maxlen)
+{
+    word_t len;
+    for (len = 0; len < maxlen && s[len]; len++);
+    return len;
+}
 
 word_t strlcpy(char *dest, const char *src, word_t size)
 {

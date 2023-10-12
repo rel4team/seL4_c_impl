@@ -100,13 +100,5 @@ SECTIONS
     }
 
     . = ALIGN(4K);
-    . = . + 8K;
-    . = ALIGN(4K);
-   .page_table :
-    {
-        . = ALIGN(4K);
-        *(.page_table.aligned)
-    }
-    . = ALIGN(4K);
     ki_end = .;
 }

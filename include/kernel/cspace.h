@@ -21,12 +21,12 @@ struct lookupCapAndSlot_ret {
     exception_t status;
     cap_t cap;
     cte_t *slot;
-};  
+};
 typedef struct lookupCapAndSlot_ret lookupCapAndSlot_ret_t;
 
 struct lookupSlot_raw_ret {
     exception_t status;
-    cte_t *slot; 
+    cte_t *slot;
 };
 typedef struct lookupSlot_raw_ret lookupSlot_raw_ret_t;
 
@@ -54,7 +54,7 @@ lookupSlot_ret_t lookupSourceSlot(cap_t root, cptr_t capptr,
 lookupSlot_ret_t lookupTargetSlot(cap_t root, cptr_t capptr,
                                   word_t depth);
 lookupSlot_ret_t lookupPivotSlot(cap_t root, cptr_t capptr,
-                                 word_t depth); 
+                                 word_t depth);
 resolveAddressBits_ret_t resolveAddressBits(cap_t nodeCap,
                                             cptr_t capptr,
                                             word_t n_bits);
