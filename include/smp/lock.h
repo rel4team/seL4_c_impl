@@ -90,7 +90,9 @@ static inline void *sel4_atomic_exchange(void *ptr, bool_t
     return prev;
 }
 
-static inline void FORCE_INLINE clh_lock_acquire(word_t cpu, bool_t irqPath)
+void clh_lock_acquire(word_t cpu, bool_t irqPath);
+
+void clh_lock_acquire(word_t cpu, bool_t irqPath)
 {
     clh_qnode_t *prev;
     big_kernel_lock.node_owners[cpu].node->value = CLHState_Pending;

@@ -187,18 +187,20 @@ exception_t checkPrio(prio_t prio, tcb_t *auth);
 #ifdef CONFIG_DEBUG_BUILD
 void tcbDebugAppend(tcb_t *tcb)
 {
+    printf("tcbDebugAppend1\n");
     debug_tcb_t *debug_tcb = TCB_PTR_DEBUG_PTR(tcb);
     /* prepend to the list */
     debug_tcb->tcbDebugPrev = NULL;
-
+    printf("tcbDebugAppend2: %lu\n", tcb->tcbAffinity);
     debug_tcb->tcbDebugNext = NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity);
-
+    printf("tcbDebugAppend3\n");
     if (NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity))
     {
         TCB_PTR_DEBUG_PTR(NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity))->tcbDebugPrev = tcb;
     }
-
+    printf("tcbDebugAppend4\n");
     NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) = tcb;
+    printf("tcbDebugAppend5\n");
 }
 
 void tcbDebugRemove(tcb_t *tcb)
@@ -516,7 +518,7 @@ static exception_t invokeTCB_SetAffinity(tcb_t *thread, word_t affinity)
     return EXCEPTION_NONE;
 }
 
-static exception_t decodeSetAffinity(cap_t cap, word_t length, word_t *buffer)
+static UNUSED exception_t decodeSetAffinity(cap_t cap, word_t length, word_t *buffer)
 {
     tcb_t *tcb;
     word_t affinity;

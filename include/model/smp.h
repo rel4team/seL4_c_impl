@@ -16,7 +16,7 @@
 typedef struct smpStatedata {
     archNodeState_t cpu;
     nodeState_t system;
-    PAD_TO_NEXT_CACHE_LN(sizeof(archNodeState_t) + sizeof(nodeState_t));
+    // PAD_TO_NEXT_CACHE_LN(sizeof(archNodeState_t) + sizeof(nodeState_t));
 } smpStatedata_t;
 
 extern smpStatedata_t ksSMP[CONFIG_MAX_NUM_NODES];

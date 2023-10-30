@@ -158,7 +158,7 @@ __attribute__((unused)) BOOT_CODE void init_plat(void)
 }
 
 #ifdef ENABLE_SMP_SUPPORT
-BOOT_CODE static bool_t try_init_kernel_secondary_core(word_t hart_id, word_t core_id)
+BOOT_CODE static UNUSED bool_t try_init_kernel_secondary_core(word_t hart_id, word_t core_id)
 {
     while (!node_boot_lock)
         ;
@@ -196,6 +196,9 @@ bool_t rust_try_init_kernel(
     vptr_t v_entry,
     paddr_t dtb_phys_addr,
     word_t dtb_size);
+
+bool_t rust_try_init_kernel_secondary_core(word_t hart_id, word_t core_id);
+
 /* Main kernel initialisation function. */
 __attribute__((unused)) static BOOT_CODE bool_t try_init_kernel(
     paddr_t ui_p_reg_start,
@@ -487,6 +490,9 @@ BOOT_CODE VISIBLE void init_kernel(
 #endif
 )
 {
+    #ifdef CONFIG_DEBUG_BUILD
+    printf("CONFIG_DEBUG_BUILD\n");
+    #endif
     bool_t result;
     pRegsToR((word_t *)avail_p_regs, ARRAY_SIZE(avail_p_regs));
     intStateIRQNodeToR((word_t*)intStateIRQNode);
@@ -494,7 +500,8 @@ BOOT_CODE VISIBLE void init_kernel(
     add_hart_to_core_map(hart_id, core_id);
     if (core_id == 0)
     {
-        result = try_init_kernel(ui_p_reg_start,
+        printf("[c]: init_kernel frist\n");
+        result = rust_try_init_kernel(ui_p_reg_start,
                                  ui_p_reg_end,
                                  pv_offset,
                                  v_entry,
@@ -503,7 +510,9 @@ BOOT_CODE VISIBLE void init_kernel(
     }
     else
     {
-        result = try_init_kernel_secondary_core(hart_id, core_id);
+        printf("[c]: init_kernel sec\n");
+        // result = try_init_kernel_secondary_core(hart_id, core_id);
+        result = rust_try_init_kernel_secondary_core(hart_id, core_id);
     }
 #else
     result = rust_try_init_kernel(ui_p_reg_start,

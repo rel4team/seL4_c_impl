@@ -15,15 +15,22 @@
 #include <benchmark/benchmark_track.h>
 
 /* Collective cpu states, including both pre core architecture dependant and independent data */
-SMP_STATE_DEFINE(smpStatedata_t, ksSMP[CONFIG_MAX_NUM_NODES] ALIGN(L1_CACHE_LINE_SIZE));
-
+// extern (smpStatedata_t, ksSMP[CONFIG_MAX_NUM_NODES] ALIGN(L1_CACHE_LINE_SIZE));
+extern smpStatedata_t ksSMP[CONFIG_MAX_NUM_NODES];
 /* Global count of how many cpus there are */
 word_t ksNumCPUs;
 
+#ifdef ENABLE_SMP_SUPPORT
+#define SMP_EXT
+
+#else 
+#define SMP_EXT extern
+#endif
+
 /* Pointer to the head of the scheduler queue for each priority */
- extern UP_STATE_DEFINE(tcb_queue_t, ksReadyQueues[NUM_READY_QUEUES]);
- extern UP_STATE_DEFINE(word_t, ksReadyQueuesL1Bitmap[CONFIG_NUM_DOMAINS]);
- extern UP_STATE_DEFINE(word_t, ksReadyQueuesL2Bitmap[CONFIG_NUM_DOMAINS][L2_BITMAP_SIZE]);
+ SMP_EXT UP_STATE_DEFINE(tcb_queue_t, ksReadyQueues[NUM_READY_QUEUES]);
+ SMP_EXT UP_STATE_DEFINE(word_t, ksReadyQueuesL1Bitmap[CONFIG_NUM_DOMAINS]);
+ SMP_EXT UP_STATE_DEFINE(word_t, ksReadyQueuesL2Bitmap[CONFIG_NUM_DOMAINS][L2_BITMAP_SIZE]);
 compile_assert(ksReadyQueuesL1BitmapBigEnough, (L2_BITMAP_SIZE - 1) <= wordBits)
 #ifdef CONFIG_KERNEL_MCS
 /* Head of the queue of threads waiting for their budget to be replenished */
@@ -31,15 +38,15 @@ UP_STATE_DEFINE(tcb_t *, ksReleaseHead);
 #endif
 
 /* Current thread TCB pointer */
-extern UP_STATE_DEFINE(tcb_t *, ksCurThread);
+SMP_EXT UP_STATE_DEFINE(tcb_t *, ksCurThread);
 
 /* Idle thread TCB pointer */
-extern UP_STATE_DEFINE(tcb_t *, ksIdleThread);
+SMP_EXT UP_STATE_DEFINE(tcb_t *, ksIdleThread);
 
 /* Values of 0 and ~0 encode ResumeCurrentThread and ChooseNewThread
  * respectively; other values encode SwitchToThread and must be valid
  * tcb pointers */
-extern UP_STATE_DEFINE(tcb_t *, ksSchedulerAction);
+SMP_EXT UP_STATE_DEFINE(tcb_t *, ksSchedulerAction);
 
 #ifdef CONFIG_HAVE_FPU
 /* Currently active FPU state, or NULL if there is no active FPU state */
