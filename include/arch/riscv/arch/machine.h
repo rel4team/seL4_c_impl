@@ -114,7 +114,9 @@ static inline void ifence(void)
     sbi_remote_fence_i(mask);
 }
 
-static inline void sfence(void)
+void sfence(void);
+
+void sfence(void)
 {
     fence_w_rw();
     sfence_local();
@@ -136,7 +138,8 @@ static inline void hwASIDFlush(asid_t asid)
 
 #else
 
-static inline void sfence(void)
+void sfence(void);
+void sfence(void)
 {
     asm volatile("sfence.vma" ::: "memory");
 }
@@ -270,7 +273,7 @@ void map_kernel_devices(void);
 /** MODIFIES: [*] */
 void initTimer(void);
 void initLocalIRQController(void);
-void initIRQController(irq_t*,int);
+void initIRQController(void);
 void setIRQTrigger(irq_t irq, bool_t trigger);
 
 #ifdef ENABLE_SMP_SUPPORT

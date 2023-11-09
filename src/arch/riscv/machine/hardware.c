@@ -256,22 +256,22 @@ BOOT_CODE void initLocalIRQController(void)
     set_sie_mask(BIT(SIE_SEIE) | BIT(SIE_STIE) | SMP_TERNARY(BIT(SIE_SSIE), 0));
 }
 
-extern void initIRQController(irq_t*,int);
-// BOOT_CODE void initIRQController(void)
-// {
-//     printf("Initializing PLIC...\n");
+void initIRQController(void);
+BOOT_CODE void initIRQController(void)
+{
+    printf("Initializing PLIC...\n");
 
-//     /* Initialize active_irq[] properly to stick to the semantics and play safe.
-//      * Effectively this is not needed if irqInvalid is zero (which is currently
-//      * the case) and the array is in the BSS, that is filled with zeros (which
-//      * the a kernel loader is supposed to do and which the ELF-Loader does).
-//      */
-//     for (word_t i = 0; i < ARRAY_SIZE(active_irq); i++) {
-//         active_irq[i] = irqInvalid;
-//     }
+    /* Initialize active_irq[] properly to stick to the semantics and play safe.
+     * Effectively this is not needed if irqInvalid is zero (which is currently
+     * the case) and the array is in the BSS, that is filled with zeros (which
+     * the a kernel loader is supposed to do and which the ELF-Loader does).
+     */
+    for (word_t i = 0; i < ARRAY_SIZE(active_irq); i++) {
+        active_irq[i] = irqInvalid;
+    }
 
-//     plic_init_controller();
-// }
+    plic_init_controller();
+}
 
 static inline void handleSpuriousIRQ(void)
 {

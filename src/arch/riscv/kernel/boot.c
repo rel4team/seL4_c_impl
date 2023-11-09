@@ -154,7 +154,7 @@ __attribute__((unused)) BOOT_CODE static void init_cpu(void)
 
 __attribute__((unused)) BOOT_CODE void init_plat(void)
 {
-    initIRQController(active_irq, ARRAY_SIZE(active_irq));
+    initIRQController();
 }
 
 #ifdef ENABLE_SMP_SUPPORT
@@ -510,7 +510,6 @@ BOOT_CODE VISIBLE void init_kernel(
     }
     else
     {
-        printf("[c]: init_kernel sec\n");
         // result = try_init_kernel_secondary_core(hart_id, core_id);
         result = rust_try_init_kernel_secondary_core(hart_id, core_id);
     }

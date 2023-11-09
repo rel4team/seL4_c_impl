@@ -16,13 +16,13 @@
 
 /* Collective cpu states, including both pre core architecture dependant and independent data */
 // extern (smpStatedata_t, ksSMP[CONFIG_MAX_NUM_NODES] ALIGN(L1_CACHE_LINE_SIZE));
-extern smpStatedata_t ksSMP[CONFIG_MAX_NUM_NODES];
+
 /* Global count of how many cpus there are */
 word_t ksNumCPUs;
 
 #ifdef ENABLE_SMP_SUPPORT
 #define SMP_EXT
-
+extern smpStatedata_t ksSMP[CONFIG_MAX_NUM_NODES];
 #else 
 #define SMP_EXT extern
 #endif
@@ -105,7 +105,7 @@ extern word_t ksDomScheduleIdx;
 word_t tlbLockCount = 0;
 
 /* Idle thread. */
-extern SECTION("._idle_thread") char ksIdleThreadTCB[CONFIG_MAX_NUM_NODES][BIT(seL4_TCBBits)] ALIGN(BIT(TCB_SIZE_BITS));
+SECTION("._idle_thread") char ksIdleThreadTCB[CONFIG_MAX_NUM_NODES][BIT(seL4_TCBBits)] ALIGN(BIT(TCB_SIZE_BITS));
 
 #ifdef CONFIG_KERNEL_MCS
 /* Idle thread Schedcontexts */

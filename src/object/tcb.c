@@ -187,20 +187,15 @@ exception_t checkPrio(prio_t prio, tcb_t *auth);
 #ifdef CONFIG_DEBUG_BUILD
 void tcbDebugAppend(tcb_t *tcb)
 {
-    printf("tcbDebugAppend1\n");
     debug_tcb_t *debug_tcb = TCB_PTR_DEBUG_PTR(tcb);
     /* prepend to the list */
     debug_tcb->tcbDebugPrev = NULL;
-    printf("tcbDebugAppend2: %lu\n", tcb->tcbAffinity);
     debug_tcb->tcbDebugNext = NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity);
-    printf("tcbDebugAppend3\n");
     if (NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity))
     {
         TCB_PTR_DEBUG_PTR(NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity))->tcbDebugPrev = tcb;
     }
-    printf("tcbDebugAppend4\n");
     NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) = tcb;
-    printf("tcbDebugAppend5\n");
 }
 
 void tcbDebugRemove(tcb_t *tcb)
@@ -466,7 +461,7 @@ void remoteQueueUpdate(tcb_t *tcb)
     if (tcb->tcbAffinity != getCurrentCPUIndex() && tcb->tcbDomain == ksCurDomain)
     {
         tcb_t *targetCurThread = NODE_STATE_ON_CORE(ksCurThread, tcb->tcbAffinity);
-
+        printf("targetCurThread: %ld, %p\n", tcb->tcbAffinity, targetCurThread);
         /* reschedule if the target core is idle or we are waking a higher priority thread (or
          * if a new irq would need to be set on MCS) */
         if (targetCurThread == NODE_STATE_ON_CORE(ksIdleThread, tcb->tcbAffinity) ||
@@ -477,6 +472,7 @@ void remoteQueueUpdate(tcb_t *tcb)
         )
         {
             ARCH_NODE_STATE(ipiReschedulePending) |= BIT(tcb->tcbAffinity);
+            printf("ipiReschedulePending : %ld\n", ARCH_NODE_STATE(ipiReschedulePending));
         }
     }
 }

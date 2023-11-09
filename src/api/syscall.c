@@ -74,6 +74,7 @@
 
 exception_t handleUnknownSyscall(word_t w)
 {
+    // printf("hello handleUnknownSyscall, w: %ld\n", w);
 #ifdef CONFIG_PRINTING
     if (w == SysDebugPutChar)
     {
@@ -147,6 +148,7 @@ exception_t handleUnknownSyscall(word_t w)
             halt();
         }
         setThreadName(TCB_PTR(cap_thread_cap_get_capTCBPtr(lu_ret.cap)), name);
+        // printf("hello SysDebugNameThread, name: %s\n", name);
         return EXCEPTION_NONE;
     }
 #ifdef ENABLE_SMP_SUPPORT

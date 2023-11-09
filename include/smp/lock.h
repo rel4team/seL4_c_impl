@@ -122,8 +122,10 @@ void clh_lock_acquire(word_t cpu, bool_t irqPath)
     __atomic_thread_fence(__ATOMIC_ACQUIRE);
 }
 
-static inline void FORCE_INLINE clh_lock_release(word_t cpu)
+void clh_lock_release(word_t cpu);
+void clh_lock_release(word_t cpu)
 {
+    // printf("clh_lock_release, cpu: %lu\n", cpu);
     /* make sure no resource access passes from this point */
     __atomic_thread_fence(__ATOMIC_RELEASE);
 
@@ -132,8 +134,10 @@ static inline void FORCE_INLINE clh_lock_release(word_t cpu)
         big_kernel_lock.node_owners[cpu].next;
 }
 
-static inline bool_t FORCE_INLINE clh_is_self_in_queue(void)
+bool_t clh_is_self_in_queue(void);
+bool_t clh_is_self_in_queue(void)
 {
+    // printf("clh_is_self_in_queue\n");
     return big_kernel_lock.node_owners[getCurrentCPUIndex()].node->value == CLHState_Pending;
 }
 
