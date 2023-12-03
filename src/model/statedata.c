@@ -67,7 +67,7 @@ UP_STATE_DEFINE(sched_context_t *, ksIdleSC);
 #endif
 
 #ifdef CONFIG_DEBUG_BUILD
-UP_STATE_DEFINE(tcb_t *, ksDebugTCBs);
+SMP_EXT UP_STATE_DEFINE(tcb_t *, ksSchedulerAction);
 #endif /* CONFIG_DEBUG_BUILD */
 #ifdef CONFIG_BENCHMARK_TRACK_UTILISATION
 UP_STATE_DEFINE(bool_t, benchmark_log_utilisation_enabled);

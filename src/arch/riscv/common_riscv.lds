@@ -39,6 +39,10 @@ SECTIONS
         *(.boot.bss)
     }
     . = ALIGN(4K);
+    .boot.uintr : AT(ADDR(.boot.uintr) - KERNEL_OFFSET) {
+        *(.boot.uintr)
+    }
+    . = ALIGN(4K);
 
     ki_boot_end = .;
 

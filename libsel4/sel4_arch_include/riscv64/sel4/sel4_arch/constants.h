@@ -19,7 +19,7 @@
 #define seL4_NotificationBits   6
 #define seL4_ReplyBits          5
 #else
-#define seL4_NotificationBits   5
+#define seL4_NotificationBits   6
 #endif
 #define seL4_EndpointBits       4
 #define seL4_IPCBufferSizeBits  10
