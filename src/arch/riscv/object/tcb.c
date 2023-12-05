@@ -12,11 +12,6 @@
 #include <arch/machine.h>
 #include <object/tcb.h>
 
-word_t CONST Arch_decodeTransfer(word_t flags)
-{
-    return 0;
-}
-
 exception_t CONST Arch_performTransfer(word_t arch, tcb_t *tcb_src, tcb_t *tcb_dest)
 {
     return EXCEPTION_NONE;

@@ -30,235 +30,27 @@
 #define NULL_PRIO 0
 
 exception_t checkPrio(prio_t prio, tcb_t *auth);
-// static exception_t checkPrio(prio_t prio, tcb_t *auth)
-// {
-//     prio_t mcp;
 
-//     mcp = auth->tcbMCP;
-
-//     /* system invariant: existing MCPs are bounded */
-//     assert(mcp <= seL4_MaxPrio);
-
-//     /* can't assign a priority greater than our own mcp */
-//     if (prio > mcp) {
-//         current_syscall_error.type = seL4_RangeError;
-//         current_syscall_error.rangeErrorMin = seL4_MinPrio;
-//         current_syscall_error.rangeErrorMax = mcp;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     return EXCEPTION_NONE;
-// }
-
-// static inline void addToBitmap(word_t cpu, word_t dom, word_t prio)
-// {
-//     word_t l1index;
-//     word_t l1index_inverted;
-
-//     l1index = prio_to_l1index(prio);
-//     l1index_inverted = invert_l1index(l1index);
-
-//     NODE_STATE_ON_CORE(ksReadyQueuesL1Bitmap[dom], cpu) |= BIT(l1index);
-//     /* we invert the l1 index when accessed the 2nd level of the bitmap in
-//        order to increase the liklihood that high prio threads l2 index word will
-//        be on the same cache line as the l1 index word - this makes sure the
-//        fastpath is fastest for high prio threads */
-//     NODE_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu) |= BIT(prio & MASK(wordRadix));
-// }
-
-// static inline void removeFromBitmap(word_t cpu, word_t dom, word_t prio)
-// {
-//     word_t l1index;
-//     word_t l1index_inverted;
-
-//     l1index = prio_to_l1index(prio);
-//     l1index_inverted = invert_l1index(l1index);
-//     NODE_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu) &= ~BIT(prio & MASK(wordRadix));
-//     if (unlikely(!NODE_STATE_ON_CORE(ksReadyQueuesL2Bitmap[dom][l1index_inverted], cpu))) {
-//         NODE_STATE_ON_CORE(ksReadyQueuesL1Bitmap[dom], cpu) &= ~BIT(l1index);
-//     }
-// }
-
-/* Add TCB to the head of a scheduler queue */
-// void tcbSchedEnqueue(tcb_t *tcb)
-// {
-// #ifdef CONFIG_KERNEL_MCS
-//     assert(isSchedulable(tcb));
-//     assert(refill_sufficient(tcb->tcbSchedContext, 0));
-// #endif
-
-//     if (!thread_state_get_tcbQueued(tcb->tcbState)) {
-//         tcb_queue_t queue;
-//         dom_t dom;
-//         prio_t prio;
-//         word_t idx;
-
-//         dom = tcb->tcbDomain;
-//         prio = tcb->tcbPriority;
-//         idx = ready_queues_index(dom, prio);
-//         queue = NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
-
-//         if (!queue.end) { /* Empty list */
-//             queue.end = tcb;
-//             addToBitmap(SMP_TERNARY(tcb->tcbAffinity, 0), dom, prio);
-//         } else {
-//             queue.head->tcbSchedPrev = tcb;
-//         }
-//         tcb->tcbSchedPrev = NULL;
-//         tcb->tcbSchedNext = queue.head;
-//         queue.head = tcb;
-
-//         NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = queue;
-
-//         thread_state_ptr_set_tcbQueued(&tcb->tcbState, true);
-//     }
-// }
-
-/* Add TCB to the end of a scheduler queue */
-// void tcbSchedAppend(tcb_t *tcb)
-// {
-// #ifdef CONFIG_KERNEL_MCS
-//     assert(isSchedulable(tcb));
-//     assert(refill_sufficient(tcb->tcbSchedContext, 0));
-//     assert(refill_ready(tcb->tcbSchedContext));
-// #endif
-//     if (!thread_state_get_tcbQueued(tcb->tcbState)) {
-//         tcb_queue_t queue;
-//         dom_t dom;
-//         prio_t prio;
-//         word_t idx;
-
-//         dom = tcb->tcbDomain;
-//         prio = tcb->tcbPriority;
-//         idx = ready_queues_index(dom, prio);
-//         queue = NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
-
-//         if (!queue.head) { /* Empty list */
-//             queue.head = tcb;
-//             addToBitmap(SMP_TERNARY(tcb->tcbAffinity, 0), dom, prio);
-//         } else {
-//             queue.end->tcbSchedNext = tcb;
-//         }
-//         tcb->tcbSchedPrev = queue.end;
-//         tcb->tcbSchedNext = NULL;
-//         queue.end = tcb;
-
-//         NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = queue;
-
-//         thread_state_ptr_set_tcbQueued(&tcb->tcbState, true);
-//     }
-// }
-
-/* Remove TCB from a scheduler queue */
-// void tcbSchedDequeue(tcb_t *tcb)
-// {
-//     if (thread_state_get_tcbQueued(tcb->tcbState)) {
-//         tcb_queue_t queue;
-//         dom_t dom;
-//         prio_t prio;
-//         word_t idx;
-
-//         dom = tcb->tcbDomain;
-//         prio = tcb->tcbPriority;
-//         idx = ready_queues_index(dom, prio);
-//         queue = NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity);
-
-//         if (tcb->tcbSchedPrev) {
-//             tcb->tcbSchedPrev->tcbSchedNext = tcb->tcbSchedNext;
-//         } else {
-//             queue.head = tcb->tcbSchedNext;
-//             if (likely(!tcb->tcbSchedNext)) {
-//                 removeFromBitmap(SMP_TERNARY(tcb->tcbAffinity, 0), dom, prio);
-//             }
-//         }
-
-//         if (tcb->tcbSchedNext) {
-//             tcb->tcbSchedNext->tcbSchedPrev = tcb->tcbSchedPrev;
-//         } else {
-//             queue.end = tcb->tcbSchedPrev;
-//         }
-
-//         NODE_STATE_ON_CORE(ksReadyQueues[idx], tcb->tcbAffinity) = queue;
-
-//         thread_state_ptr_set_tcbQueued(&tcb->tcbState, false);
-//     }
-// }
 
 #ifdef CONFIG_DEBUG_BUILD
+extern void tcb_debug_remove(tcb_t *tcb);
+extern void tcb_debug_append(tcb_t *tcb);
+
 void tcbDebugAppend(tcb_t *tcb)
 {
-    debug_tcb_t *debug_tcb = TCB_PTR_DEBUG_PTR(tcb);
-    /* prepend to the list */
-    debug_tcb->tcbDebugPrev = NULL;
-    debug_tcb->tcbDebugNext = NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity);
-    if (NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity))
-    {
-        TCB_PTR_DEBUG_PTR(NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity))->tcbDebugPrev = tcb;
-    }
-    NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) = tcb;
+    tcb_debug_append(tcb);
 }
 
 void tcbDebugRemove(tcb_t *tcb)
 {
-    debug_tcb_t *debug_tcb = TCB_PTR_DEBUG_PTR(tcb);
-
-    assert(NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) != NULL);
-    if (tcb == NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity))
-    {
-        NODE_STATE_ON_CORE(ksDebugTCBs, tcb->tcbAffinity) = TCB_PTR_DEBUG_PTR(NODE_STATE_ON_CORE(ksDebugTCBs,
-                                                                                                 tcb->tcbAffinity))
-                                                                ->tcbDebugNext;
-    }
-    else
-    {
-        assert(TCB_PTR_DEBUG_PTR(tcb)->tcbDebugPrev);
-        TCB_PTR_DEBUG_PTR(debug_tcb->tcbDebugPrev)->tcbDebugNext = debug_tcb->tcbDebugNext;
-    }
-
-    if (debug_tcb->tcbDebugNext)
-    {
-        TCB_PTR_DEBUG_PTR(debug_tcb->tcbDebugNext)->tcbDebugPrev = debug_tcb->tcbDebugPrev;
-    }
-
-    debug_tcb->tcbDebugPrev = NULL;
-    debug_tcb->tcbDebugNext = NULL;
+    tcb_debug_remove(tcb);
 }
 #endif /* CONFIG_DEBUG_BUILD */
 
 #ifndef CONFIG_KERNEL_MCS
-/* Add TCB to the end of an endpoint queue */
-// tcb_queue_t tcbEPAppend(tcb_t *tcb, tcb_queue_t queue)
-// {
-//     if (!queue.head) { /* Empty list */
-//         queue.head = tcb;
-//     } else {
-//         queue.end->tcbEPNext = tcb;
-//     }
-//     tcb->tcbEPPrev = queue.end;
-//     tcb->tcbEPNext = NULL;
-//     queue.end = tcb;
 
-//     return queue;
-// }
 #endif
 
-/* Remove TCB from an endpoint queue */
-// tcb_queue_t tcbEPDequeue(tcb_t *tcb, tcb_queue_t queue)
-// {
-//     if (tcb->tcbEPPrev) {
-//         tcb->tcbEPPrev->tcbEPNext = tcb->tcbEPNext;
-//     } else {
-//         queue.head = tcb->tcbEPNext;
-//     }
-
-//     if (tcb->tcbEPNext) {
-//         tcb->tcbEPNext->tcbEPPrev = tcb->tcbEPPrev;
-//     } else {
-//         queue.end = tcb->tcbEPPrev;
-//     }
-
-//     return queue;
-// }
 
 #ifdef CONFIG_KERNEL_MCS
 void tcbReleaseRemove(tcb_t *tcb)
@@ -364,93 +156,12 @@ tcb_t *tcbReleaseDequeue(void)
 // }
 
 #ifndef CONFIG_KERNEL_MCS
-// void setupCallerCap(tcb_t *sender, tcb_t *receiver, bool_t canGrant)
-// {
-//     cte_t *replySlot, *callerSlot;
-//     cap_t masterCap UNUSED, callerCap UNUSED;
 
-//     setThreadState(sender, ThreadState_BlockedOnReply);
-//     replySlot = TCB_PTR_CTE_PTR(sender, tcbReply);
-//     masterCap = replySlot->cap;
-//     /* Haskell error: "Sender must have a valid master reply cap" */
-//     assert(cap_get_capType(masterCap) == cap_reply_cap);
-//     assert(cap_reply_cap_get_capReplyMaster(masterCap));
-//     assert(cap_reply_cap_get_capReplyCanGrant(masterCap));
-//     assert(TCB_PTR(cap_reply_cap_get_capTCBPtr(masterCap)) == sender);
-//     callerSlot = TCB_PTR_CTE_PTR(receiver, tcbCaller);
-//     callerCap = callerSlot->cap;
-//     /* Haskell error: "Caller cap must not already exist" */
-//     assert(cap_get_capType(callerCap) == cap_null_cap);
-//     cteInsert(cap_reply_cap_new(canGrant, false, TCB_REF(sender)),
-//               replySlot, callerSlot);
-// }
-
-// void deleteCallerCap(tcb_t *receiver)
-// {
-//     cte_t *callerSlot;
-
-//     callerSlot = TCB_PTR_CTE_PTR(receiver, tcbCaller);
-//     /** GHOSTUPD: "(True, gs_set_assn cteDeleteOne_'proc (ucast cap_reply_cap))" */
-//     cteDeleteOne(callerSlot);
-// }
 #endif
 
 extern extra_caps_t current_extra_caps;
 
-// exception_t lookupExtraCaps(tcb_t *thread, word_t *bufferPtr, seL4_MessageInfo_t info)
-// {
-//     lookupSlot_raw_ret_t lu_ret;
-//     cptr_t cptr;
-//     word_t i, length;
 
-//     if (!bufferPtr) {
-//         current_extra_caps.excaprefs[0] = NULL;
-//         return EXCEPTION_NONE;
-//     }
-
-//     length = seL4_MessageInfo_get_extraCaps(info);
-
-//     for (i = 0; i < length; i++) {
-//         cptr = getExtraCPtr(bufferPtr, i);
-
-//         lu_ret = lookupSlot(thread, cptr);
-//         if (lu_ret.status != EXCEPTION_NONE) {
-//             current_fault = seL4_Fault_CapFault_new(cptr, false);
-//             return lu_ret.status;
-//         }
-
-//         current_extra_caps.excaprefs[i] = lu_ret.slot;
-//     }
-//     if (i < seL4_MsgMaxExtraCaps) {
-//         current_extra_caps.excaprefs[i] = NULL;
-//     }
-
-//     return EXCEPTION_NONE;
-// }
-
-/* Copy IPC MRs from one thread to another */
-// word_t copyMRs(tcb_t *sender, word_t *sendBuf, tcb_t *receiver,
-//                word_t *recvBuf, word_t n)
-// {
-//     word_t i;
-
-//     /* Copy inline words */
-//     for (i = 0; i < n && i < n_msgRegisters; i++) {
-//         setRegister(receiver, msgRegisters[i],
-//                     getRegister(sender, msgRegisters[i]));
-//     }
-
-//     if (!recvBuf || !sendBuf) {
-//         return i;
-//     }
-
-//     /* Copy out-of-line words */
-//     for (; i < n; i++) {
-//         recvBuf[i + 1] = sendBuf[i + 1];
-//     }
-
-//     return i;
-// }
 
 #ifdef ENABLE_SMP_SUPPORT
 /* This checks if the current updated to scheduler queue is changing the previous scheduling
@@ -806,137 +517,7 @@ static exception_t decodeUnsetBreakpoint(cap_t cap, word_t *buffer)
 }
 #endif /* CONFIG_HARDWARE_DEBUG_API */
 
-// static exception_t invokeSetTLSBase(tcb_t *thread, word_t tls_base)
-// {
-//     setRegister(thread, TLS_BASE, tls_base);
-//     if (thread == NODE_STATE(ksCurThread))
-//     {
-//         /* If this is the current thread force a reschedule to ensure that any changes
-//          * to the TLS_BASE are realized */
-//         rescheduleRequired();
-//     }
 
-//     return EXCEPTION_NONE;
-// }
-
-// static exception_t decodeSetTLSBase(cap_t cap, word_t length, word_t *buffer)
-// {
-//     word_t tls_base;
-
-//     if (length < 1)
-//     {
-//         userError("TCB SetTLSBase: Truncated message.");
-//         current_syscall_error.type = seL4_TruncatedMessage;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     tls_base = getSyscallArg(0, buffer);
-
-//     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-//     return invokeSetTLSBase(TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), tls_base);
-// }
-
-/* The following functions sit in the syscall error monad, but include the
- * exception cases for the preemptible bottom end, as they call the invoke
- * functions directly.  This is a significant deviation from the Haskell
- * spec. */
-// exception_t decodeTCBInvocation(word_t invLabel, word_t length, cap_t *cap,
-//                                 cte_t *slot, bool_t call, word_t *buffer)
-// {
-//     /* Stall the core if we are operating on a remote TCB that is currently running */
-//     SMP_COND_STATEMENT(remoteTCBStall(TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)));)
-
-//     switch (invLabel)
-//     {
-//     case TCBReadRegisters:
-//         /* Second level of decoding */
-//         return decodeReadRegisters(cap, length, call, buffer);
-
-//     case TCBWriteRegisters:
-//         return decodeWriteRegisters(cap, length, buffer);
-
-//     case TCBCopyRegisters:
-//         return decodeCopyRegisters(cap, length, buffer);
-
-//     case TCBSuspend:
-//         /* Jump straight to the invoke */
-//         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-//         return invokeTCB_Suspend(
-//             TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)));
-
-//     case TCBResume:
-//         setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-//         return invokeTCB_Resume(
-//             TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)));
-
-//     case TCBConfigure:
-//         return decodeTCBConfigure(cap, length, slot, buffer);
-
-//     case TCBSetPriority:
-//         return decodeSetPriority(cap, length, buffer);
-
-//     case TCBSetMCPriority:
-//         return decodeSetMCPriority(cap, length, buffer);
-
-//     case TCBSetSchedParams:
-// #ifdef CONFIG_KERNEL_MCS
-//         return decodeSetSchedParams(cap, length, slot, buffer);
-// #else
-//         return decodeSetSchedParams(cap, length, buffer);
-// #endif
-
-//     case TCBSetIPCBuffer:
-//         return decodeSetIPCBuffer(cap, length, slot, buffer);
-
-//     case TCBSetSpace:
-//         return decodeSetSpace(cap, length, slot, buffer);
-
-//     case TCBBindNotification:
-//         return decodeBindNotification(cap);
-
-//     case TCBUnbindNotification:
-//         return decodeUnbindNotification((cap_t*)&cap);
-
-// #ifdef CONFIG_KERNEL_MCS
-//     case TCBSetTimeoutEndpoint:
-//         return decodeSetTimeoutEndpoint(cap, slot);
-// #else
-// #ifdef ENABLE_SMP_SUPPORT
-//     case TCBSetAffinity:
-//         return decodeSetAffinity(cap, length, buffer);
-// #endif /* ENABLE_SMP_SUPPORT */
-// #endif
-
-//         /* There is no notion of arch specific TCB invocations so this needs to go here */
-// #ifdef CONFIG_VTX
-//     case TCBSetEPTRoot:
-//         return decodeSetEPTRoot(cap);
-// #endif
-
-// #ifdef CONFIG_HARDWARE_DEBUG_API
-//     case TCBConfigureSingleStepping:
-//         return decodeConfigureSingleStepping(cap, call, buffer);
-
-//     case TCBSetBreakpoint:
-//         return decodeSetBreakpoint(cap, buffer);
-
-//     case TCBGetBreakpoint: 
-//         return decodeGetBreakpoint(cap, call, buffer);
-
-//     case TCBUnsetBreakpoint:
-//         return decodeUnsetBreakpoint(cap, buffer);
-// #endif
-
-//     case TCBSetTLSBase:
-//         return decodeSetTLSBase(cap, length, buffer);
-
-//     default:
-//         /* Haskell: "throw IllegalOperation" */
-//         userError("TCB: Illegal operation.");
-//         current_syscall_error.type = seL4_IllegalOperation;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-// }
 
 enum CopyRegistersFlags
 {
@@ -946,135 +527,19 @@ enum CopyRegistersFlags
     CopyRegisters_transferInteger = 3
 };
 
-// exception_t decodeCopyRegisters(cap_t *cap, word_t length, word_t *buffer)
-// {
-//     word_t transferArch;
-//     tcb_t *srcTCB;
-//     cap_t source_cap;
-//     word_t flags;
-
-//     if (length < 1 || current_extra_caps.excaprefs[0] == NULL) {
-//         userError("TCB CopyRegisters: Truncated message.");
-//         current_syscall_error.type = seL4_TruncatedMessage;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     flags = getSyscallArg(0, buffer);
-
-//     transferArch = Arch_decodeTransfer(flags >> 8);
-
-//     source_cap = current_extra_caps.excaprefs[0]->cap;
-
-//     if (cap_get_capType(source_cap) == cap_thread_cap) {
-//         srcTCB = TCB_PTR(cap_thread_cap_get_capTCBPtr(source_cap));
-//     } else {
-//         userError("TCB CopyRegisters: Invalid source TCB.");
-//         current_syscall_error.type = seL4_InvalidCapability;
-//         current_syscall_error.invalidCapNumber = 1;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-//     return invokeTCB_CopyRegisters(
-//                TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), srcTCB,
-//                flags & BIT(CopyRegisters_suspendSource),
-//                flags & BIT(CopyRegisters_resumeTarget),
-//                flags & BIT(CopyRegisters_transferFrame),
-//                flags & BIT(CopyRegisters_transferInteger),
-//                transferArch);
-
-// }
 
 enum ReadRegistersFlags
 {
     ReadRegisters_suspend = 0
 };
 
-// exception_t decodeReadRegisters(cap_t cap, word_t length, bool_t call,
-//                                 word_t *buffer)
-// {
-//     word_t transferArch, flags, n;
-//     tcb_t *thread;
-
-//     if (length < 2) {
-//         userError("TCB ReadRegisters: Truncated message.");
-//         current_syscall_error.type = seL4_TruncatedMessage;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     flags = getSyscallArg(0, buffer);
-//     n     = getSyscallArg(1, buffer);
-
-//     if (n < 1 || n > n_frameRegisters + n_gpRegisters) {
-//         userError("TCB ReadRegisters: Attempted to read an invalid number of registers (%d).",
-//                   (int)n);
-//         current_syscall_error.type = seL4_RangeError;
-//         current_syscall_error.rangeErrorMin = 1;
-//         current_syscall_error.rangeErrorMax = n_frameRegisters +
-//                                               n_gpRegisters;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     transferArch = Arch_decodeTransfer(flags >> 8);
-
-//     thread = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-//     if (thread == NODE_STATE(ksCurThread)) {
-//         userError("TCB ReadRegisters: Attempted to read our own registers.");
-//         current_syscall_error.type = seL4_IllegalOperation;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-//     return invokeTCB_ReadRegisters(
-//                TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)),
-//                flags & BIT(ReadRegisters_suspend),
-//                n, transferArch, call);
-// }
 
 enum WriteRegistersFlags
 {
     WriteRegisters_resume = 0
 };
 
-// exception_t decodeWriteRegisters(cap_t cap, word_t length, word_t *buffer)
-// {
-//     word_t flags, w;
-//     word_t transferArch;
-//     tcb_t *thread;
 
-//     if (length < 2)
-//     {
-//         userError("TCB WriteRegisters: Truncated message.");
-//         current_syscall_error.type = seL4_TruncatedMessage;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     flags = getSyscallArg(0, buffer);
-//     w = getSyscallArg(1, buffer);
-
-//     if (length - 2 < w)
-//     {
-//         userError("TCB WriteRegisters: Message too short for requested write size (%d/%d).",
-//                   (int)(length - 2), (int)w);
-//         current_syscall_error.type = seL4_TruncatedMessage;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     transferArch = Arch_decodeTransfer(flags >> 8);
-
-//     thread = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-//     if (thread == NODE_STATE(ksCurThread))
-//     {
-//         userError("TCB WriteRegisters: Attempted to write our own registers.");
-//         current_syscall_error.type = seL4_IllegalOperation;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-//     return invokeTCB_WriteRegisters(thread,
-//                                     flags & BIT(WriteRegisters_resume),
-//                                     w, transferArch, buffer);
-// }
 
 #ifdef CONFIG_KERNEL_MCS
 static bool_t validFaultHandler(cap_t cap)
@@ -1101,236 +566,7 @@ static bool_t validFaultHandler(cap_t cap)
 }
 #endif
 
-/* TCBConfigure batches SetIPCBuffer and parts of SetSpace. */
-// exception_t decodeTCBConfigure(cap_t *_cap, word_t length, cte_t *slot, word_t *buffer)
-// { 
-//     cap_t cap = *_cap;
-//     cte_t *bufferSlot, *cRootSlot, *vRootSlot;
-//     cap_t bufferCap, cRootCap, vRootCap;
-//     deriveCap_ret_t dc_ret;
-//     word_t cRootData, vRootData, bufferAddr;
-// #ifdef CONFIG_KERNEL_MCS
-// #define TCBCONFIGURE_ARGS 3
-// #else
-// #define TCBCONFIGURE_ARGS 4
-// #endif
-//     if (length < TCBCONFIGURE_ARGS || current_extra_caps.excaprefs[0] == NULL || current_extra_caps.excaprefs[1] == NULL || current_extra_caps.excaprefs[2] == NULL)
-//     {
-//         userError("TCB Configure: Truncated message.");
-//         current_syscall_error.type = seL4_TruncatedMessage;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
 
-// #ifdef CONFIG_KERNEL_MCS
-//     cRootData = getSyscallArg(0, buffer);
-//     vRootData = getSyscallArg(1, buffer);
-//     bufferAddr = getSyscallArg(2, buffer);
-// #else
-//     cptr_t faultEP = getSyscallArg(0, buffer);
-//     cRootData = getSyscallArg(1, buffer);
-//     vRootData = getSyscallArg(2, buffer);
-//     bufferAddr = getSyscallArg(3, buffer);
-// #endif
-
-//     cRootSlot = current_extra_caps.excaprefs[0];
-//     cRootCap = current_extra_caps.excaprefs[0]->cap;
-//     vRootSlot = current_extra_caps.excaprefs[1];
-//     vRootCap = current_extra_caps.excaprefs[1]->cap;
-//     bufferSlot = current_extra_caps.excaprefs[2];
-//     bufferCap = current_extra_caps.excaprefs[2]->cap;
-
-//     if (bufferAddr == 0)
-//     {
-//         bufferSlot = NULL;
-//     }
-//     else
-//     {
-//         dc_ret = deriveCap(bufferSlot, bufferCap);
-//         if (dc_ret.status != EXCEPTION_NONE)
-//         {
-//             return dc_ret.status;
-//         }
-//         bufferCap = dc_ret.cap;
-
-//         exception_t e = checkValidIPCBuffer(bufferAddr, bufferCap);
-//         if (e != EXCEPTION_NONE)
-//         {
-//             return e;
-//         }
-//     }
-
-//     if (slotCapLongRunningDelete(
-//             TCB_PTR_CTE_PTR(cap_thread_cap_get_capTCBPtr(cap), tcbCTable)) ||
-//         slotCapLongRunningDelete(
-//             TCB_PTR_CTE_PTR(cap_thread_cap_get_capTCBPtr(cap), tcbVTable)))
-//     {
-//         userError("TCB Configure: CSpace or VSpace currently being deleted.");
-//         current_syscall_error.type = seL4_IllegalOperation;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-//     if (cRootData != 0)
-//     {
-//         cRootCap = updateCapData(false, cRootData, cRootCap);
-//     }
-   
-
-//     dc_ret = deriveCap(cRootSlot, cRootCap);
-//     if (dc_ret.status != EXCEPTION_NONE)
-//     {
-//         return dc_ret.status;
-//     }
-//     cRootCap = dc_ret.cap;
-
-//     if (cap_get_capType(cRootCap) != cap_cnode_cap)
-//     {
-//         userError("TCB Configure: CSpace cap is invalid.");
-//         current_syscall_error.type = seL4_IllegalOperation;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     if (vRootData != 0)
-//     {
-//         vRootCap = updateCapData(false, vRootData, vRootCap);
-//     }
-
-//     dc_ret = deriveCap(vRootSlot, vRootCap);
-//     if (dc_ret.status != EXCEPTION_NONE)
-//     {
-//         return dc_ret.status;
-//     }
-//     vRootCap = dc_ret.cap;
-
-//     if (!isValidVTableRoot(vRootCap))
-//     {
-//         userError("TCB Configure: VSpace cap is invalid.");
-//         current_syscall_error.type = seL4_IllegalOperation;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-// #ifdef CONFIG_KERNEL_MCS
-//     return invokeTCB_ThreadControlCaps(
-//         TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
-//         cap_null_cap_new(), NULL,
-//         cap_null_cap_new(), NULL,
-//         cRootCap, cRootSlot,
-//         vRootCap, vRootSlot,
-//         bufferAddr, bufferCap,
-//         bufferSlot, thread_control_caps_update_space | thread_control_caps_update_ipc_buffer);
-// #else
-//     // printf("cRootCap: %llx %llx\n", (unsigned long long)cRootCap.words[0], (unsigned long long)cRootCap.words[1]);
-//     // printf("vRootCap: %llx %llx\n", (unsigned long long)vRootCap.words[0], (unsigned long long)vRootCap.words[1]);
-//     // printf("bufferCap: %llx %llx\n", (unsigned long long)bufferCap.words[0], (unsigned long long)bufferCap.words[1]);
-//     // printf("addr %llx %llx %llx %llx\n", (unsigned long long)cRootSlot, (unsigned long long)vRootSlot, (unsigned long long)bufferAddr, (unsigned long long)bufferSlot);
-//     return invokeTCB_ThreadControl(
-//         TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
-//         faultEP, NULL_PRIO, NULL_PRIO,
-//         cRootCap, cRootSlot,
-//         vRootCap, vRootSlot,
-//         bufferAddr, bufferCap,
-//         bufferSlot, thread_control_update_space | thread_control_update_ipc_buffer);
-// #endif
-// }
-
-// exception_t decodeSetPriority(cap_t cap, word_t length, word_t *buffer)
-// {
-//     if (length < 1 || current_extra_caps.excaprefs[0] == NULL)
-//     {
-//         userError("TCB SetPriority: Truncated message.");
-//         current_syscall_error.type = seL4_TruncatedMessage;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     prio_t newPrio = getSyscallArg(0, buffer);
-//     cap_t authCap = current_extra_caps.excaprefs[0]->cap;
-
-//     if (cap_get_capType(authCap) != cap_thread_cap)
-//     {
-//         userError("Set priority: authority cap not a TCB.");
-//         current_syscall_error.type = seL4_InvalidCapability;
-//         current_syscall_error.invalidCapNumber = 1;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     tcb_t *authTCB = TCB_PTR(cap_thread_cap_get_capTCBPtr(authCap));
-//     exception_t status = checkPrio(newPrio, authTCB);
-//     if (status != EXCEPTION_NONE)
-//     {
-//         userError("TCB SetPriority: Requested priority %lu too high (max %lu).",
-//                   (unsigned long)newPrio, (unsigned long)authTCB->tcbMCP);
-//         return status;
-//     }
-
-//     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-// #ifdef CONFIG_KERNEL_MCS
-//     return invokeTCB_ThreadControlSched(
-//         TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), NULL,
-//         cap_null_cap_new(), NULL,
-//         NULL_PRIO, newPrio,
-//         NULL, thread_control_sched_update_priority);
-// #else
-//     cap_t cap1 =cap_null_cap_new();
-//     cap_t cap2 =cap_null_cap_new();
-//     cap_t cap3 =cap_null_cap_new();
-//     return invokeTCB_ThreadControl(
-//         TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), NULL,
-//         0, NULL_PRIO, newPrio,
-//         (cap_t*)&cap1, NULL,
-//         (cap_t*)&cap2, NULL,
-//         0, (cap_t*)&cap3,
-//         NULL, thread_control_update_priority);
-// #endif
-// }
-
-// exception_t decodeSetMCPriority(cap_t cap, word_t length, word_t *buffer)
-// {
-//     if (length < 1 || current_extra_caps.excaprefs[0] == NULL)
-//     {
-//         userError("TCB SetMCPriority: Truncated message.");
-//         current_syscall_error.type = seL4_TruncatedMessage;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     prio_t newMcp = getSyscallArg(0, buffer);
-//     cap_t authCap = current_extra_caps.excaprefs[0]->cap;
-
-//     if (cap_get_capType(authCap) != cap_thread_cap)
-//     {
-//         userError("TCB SetMCPriority: authority cap not a TCB.");
-//         current_syscall_error.type = seL4_InvalidCapability;
-//         current_syscall_error.invalidCapNumber = 1;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     tcb_t *authTCB = TCB_PTR(cap_thread_cap_get_capTCBPtr(authCap));
-//     exception_t status = checkPrio(newMcp, authTCB);
-//     if (status != EXCEPTION_NONE)
-//     {
-//         userError("TCB SetMCPriority: Requested maximum controlled priority %lu too high (max %lu).",
-//                   (unsigned long)newMcp, (unsigned long)authTCB->tcbMCP);
-//         return status;
-//     }
-
-//     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-// #ifdef CONFIG_KERNEL_MCS
-//     return invokeTCB_ThreadControlSched(
-//         TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), NULL,
-//         cap_null_cap_new(), NULL,
-//         newMcp, NULL_PRIO,
-//         NULL, thread_control_sched_update_mcp);
-// #else
-//     cap_t cap1 =cap_null_cap_new();
-//     cap_t cap2 =cap_null_cap_new();
-//     cap_t cap3 =cap_null_cap_new();
-//     return invokeTCB_ThreadControl(
-//         TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), NULL,
-//         0, newMcp, NULL_PRIO,
-//         (cap_t*) & cap1, NULL,
-//         (cap_t*) & cap2, NULL,
-//         0, (cap_t*) & cap3,
-//         NULL, thread_control_update_mcp);
-// #endif
-// }
 
 #ifdef CONFIG_KERNEL_MCS
 exception_t decodeSetTimeoutEndpoint(cap_t cap, cte_t *slot)
@@ -1364,630 +600,93 @@ exception_t decodeSetTimeoutEndpoint(cap_t cap, cte_t *slot)
 }
 #endif
 
-// #ifdef CONFIG_KERNEL_MCS
-// exception_t decodeSetSchedParams(cap_t cap, word_t length, cte_t *slot, word_t *buffer)
-// #else
-// exception_t decodeSetSchedParams(cap_t cap, word_t length, word_t *buffer)
-// #endif
-// {
-//     if (length < 2 || current_extra_caps.excaprefs[0] == NULL
-// #ifdef CONFIG_KERNEL_MCS
-//         || current_extra_caps.excaprefs[1] == NULL || current_extra_caps.excaprefs[2] == NULL
-// #endif
-//     )
-//     {
-//         userError("TCB SetSchedParams: Truncated message.");
-//         current_syscall_error.type = seL4_TruncatedMessage;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
 
-//     prio_t newMcp = getSyscallArg(0, buffer);
-//     prio_t newPrio = getSyscallArg(1, buffer);
-//     cap_t authCap = current_extra_caps.excaprefs[0]->cap;
-// #ifdef CONFIG_KERNEL_MCS
-//     cap_t scCap = current_extra_caps.excaprefs[1]->cap;
-//     cte_t *fhSlot = current_extra_caps.excaprefs[2];
-//     cap_t fhCap = current_extra_caps.excaprefs[2]->cap;
-// #endif
-
-//     if (cap_get_capType(authCap) != cap_thread_cap)
-//     {
-//         userError("TCB SetSchedParams: authority cap not a TCB.");
-//         current_syscall_error.type = seL4_InvalidCapability;
-//         current_syscall_error.invalidCapNumber = 1;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     tcb_t *authTCB = TCB_PTR(cap_thread_cap_get_capTCBPtr(authCap));
-//     exception_t status = checkPrio(newMcp, authTCB);
-//     if (status != EXCEPTION_NONE)
-//     {
-//         userError("TCB SetSchedParams: Requested maximum controlled priority %lu too high (max %lu).",
-//                   (unsigned long)newMcp, (unsigned long)authTCB->tcbMCP);
-//         return status;
-//     }
-
-//     status = checkPrio(newPrio, authTCB);
-//     if (status != EXCEPTION_NONE)
-//     {
-//         userError("TCB SetSchedParams: Requested priority %lu too high (max %lu).",
-//                   (unsigned long)newPrio, (unsigned long)authTCB->tcbMCP);
-//         return status;
-//     }
-
-// #ifdef CONFIG_KERNEL_MCS
-//     tcb_t *tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-//     sched_context_t *sc = NULL;
-//     switch (cap_get_capType(scCap))
-//     {
-//     case cap_sched_context_cap:
-//         sc = SC_PTR(cap_sched_context_cap_get_capSCPtr(scCap));
-//         if (tcb->tcbSchedContext)
-//         {
-//             userError("TCB Configure: tcb already has a scheduling context.");
-//             current_syscall_error.type = seL4_IllegalOperation;
-//             return EXCEPTION_SYSCALL_ERROR;
-//         }
-//         if (sc->scTcb)
-//         {
-//             userError("TCB Configure: sched contextext already bound.");
-//             current_syscall_error.type = seL4_IllegalOperation;
-//             return EXCEPTION_SYSCALL_ERROR;
-//         }
-//         if (isBlocked(tcb) && !sc_released(sc))
-//         {
-//             userError("TCB Configure: tcb blocked and scheduling context not schedulable.");
-//             current_syscall_error.type = seL4_IllegalOperation;
-//             return EXCEPTION_SYSCALL_ERROR;
-//         }
-//         break;
-//     case cap_null_cap:
-//         if (tcb == NODE_STATE(ksCurThread))
-//         {
-//             userError("TCB SetSchedParams: Cannot change sched_context of current thread");
-//             current_syscall_error.type = seL4_IllegalOperation;
-//             return EXCEPTION_SYSCALL_ERROR;
-//         }
-//         break;
-//     default:
-//         userError("TCB Configure: sched context cap invalid.");
-//         current_syscall_error.type = seL4_InvalidCapability;
-//         current_syscall_error.invalidCapNumber = 2;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     if (!validFaultHandler(fhCap))
-//     {
-//         userError("TCB Configure: fault endpoint cap invalid.");
-//         current_syscall_error.type = seL4_InvalidCapability;
-//         current_syscall_error.invalidCapNumber = 3;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-// #endif
-//     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-// #ifdef CONFIG_KERNEL_MCS
-//     return invokeTCB_ThreadControlSched(
-//         TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
-//         fhCap, fhSlot,
-//         newMcp, newPrio,
-//         sc,
-//         thread_control_sched_update_mcp |
-//             thread_control_sched_update_priority |
-//             thread_control_sched_update_sc |
-//             thread_control_sched_update_fault);
-// #else
-//     cap_t cap1 =cap_null_cap_new();
-//     cap_t cap2 =cap_null_cap_new();
-//     cap_t cap3 =cap_null_cap_new();
-//     return invokeTCB_ThreadControl(
-//         TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), NULL,
-//         0, newMcp, newPrio,
-//         (cap_t*) & cap1, NULL,
-//         (cap_t*) & cap2, NULL,
-//         0, (cap_t*) & cap3,
-//         NULL, thread_control_update_mcp | thread_control_update_priority);
-// #endif
-// }
-
-// exception_t decodeSetIPCBuffer(cap_t cap, word_t length, cte_t *slot, word_t *buffer)
-// {
-//     cptr_t cptr_bufferPtr;
-//     cap_t bufferCap;
-//     cte_t *bufferSlot;
-
-//     if (length < 1 || current_extra_caps.excaprefs[0] == NULL)
-//     {
-//         userError("TCB SetIPCBuffer: Truncated message.");
-//         current_syscall_error.type = seL4_TruncatedMessage;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     cptr_bufferPtr = getSyscallArg(0, buffer);
-//     bufferSlot = current_extra_caps.excaprefs[0];
-//     bufferCap = current_extra_caps.excaprefs[0]->cap;
-
-//     if (cptr_bufferPtr == 0)
-//     {
-//         bufferSlot = NULL;
-//     }
-//     else
-//     {
-//         exception_t e;
-//         deriveCap_ret_t dc_ret;
-
-//         dc_ret = deriveCap(bufferSlot, bufferCap);
-//         if (dc_ret.status != EXCEPTION_NONE)
-//         {
-//             return dc_ret.status;
-//         }
-//         bufferCap = dc_ret.cap;
-//         e = checkValidIPCBuffer(cptr_bufferPtr, bufferCap);
-//         if (e != EXCEPTION_NONE)
-//         {
-//             return e;
-//         }
-//     }
-
-//     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-// #ifdef CONFIG_KERNEL_MCS
-//     return invokeTCB_ThreadControlCaps(
-//         TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
-//         cap_null_cap_new(), NULL,
-//         cap_null_cap_new(), NULL,
-//         cap_null_cap_new(), NULL,
-//         cap_null_cap_new(), NULL,
-//         cptr_bufferPtr, bufferCap,
-//         bufferSlot, thread_control_caps_update_ipc_buffer);
-// #else
-//     cap_t cap1 =cap_null_cap_new();
-//     cap_t cap2 =cap_null_cap_new();
-//     return invokeTCB_ThreadControl(
-//         TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
-//         0, NULL_PRIO, NULL_PRIO,
-//         (cap_t*) & cap1, NULL,
-//         (cap_t*) & cap2, NULL,
-//         cptr_bufferPtr, (cap_t*) &bufferCap,
-//         bufferSlot, thread_control_update_ipc_buffer);
-
-// #endif
-// }
-
-// exception_t process4(cap_t *, word_t, cte_t *, cap_t *, cte_t *, cap_t *, cte_t *, word_t, word_t);
 
 #ifdef CONFIG_KERNEL_MCS
 #define DECODE_SET_SPACE_PARAMS 2
 #else
 #define DECODE_SET_SPACE_PARAMS 3
 #endif
-// exception_t decodeSetSpace(cap_t *_cap, word_t length, cte_t *slot, word_t *buffer)
-// {
-//     cap_t cap = *_cap;
-//     word_t cRootData, vRootData;
-//     cte_t *cRootSlot, *vRootSlot;
-//     cap_t cRootCap, vRootCap;
 
-//     if (length < DECODE_SET_SPACE_PARAMS || current_extra_caps.excaprefs[0] == NULL || current_extra_caps.excaprefs[1] == NULL
-// #ifdef CONFIG_KERNEL_MCS
-//         || current_extra_caps.excaprefs[2] == NULL
-// #endif
-//     )
-//     {
-//         userError("TCB SetSpace: Truncated message.");
-//         current_syscall_error.type = seL4_TruncatedMessage;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-// #ifdef CONFIG_KERNEL_MCS
-//     cRootData = getSyscallArg(0, buffer);
-//     vRootData = getSyscallArg(1, buffer);
-
-//     cte_t *fhSlot = current_extra_caps.excaprefs[0];
-//     cap_t fhCap = current_extra_caps.excaprefs[0]->cap;
-//     cRootSlot = current_extra_caps.excaprefs[1];
-//     cRootCap = current_extra_caps.excaprefs[1]->cap;
-//     vRootSlot = current_extra_caps.excaprefs[2];
-//     vRootCap = current_extra_caps.excaprefs[2]->cap;
-// #else
-//     cptr_t faultEP = getSyscallArg(0, buffer);
-//     cRootData = getSyscallArg(1, buffer);
-//     vRootData = getSyscallArg(2, buffer);
-
-//     cRootSlot = current_extra_caps.excaprefs[0];
-//     cRootCap = current_extra_caps.excaprefs[0]->cap;
-//     vRootSlot = current_extra_caps.excaprefs[1];
-//     vRootCap = current_extra_caps.excaprefs[1]->cap;
-// #endif
-
-//     if (slotCapLongRunningDelete(
-//             TCB_PTR_CTE_PTR(cap_thread_cap_get_capTCBPtr(cap), tcbCTable)) ||
-//         slotCapLongRunningDelete(
-//             TCB_PTR_CTE_PTR(cap_thread_cap_get_capTCBPtr(cap), tcbVTable)))
-//     {
-//         userError("TCB SetSpace: CSpace or VSpace currently being deleted.");
-//         current_syscall_error.type = seL4_IllegalOperation;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-//     // deriveCap_ret_t dc_ret;
-//     // if (cRootData != 0)
-//     // {
-//     //     cRootCap = updateCapData(false, cRootData, cRootCap);
-//     // }
-//     // printf(" here cRootCap:%llx %llx\n", (unsigned long long)cRootCap.words[0], (unsigned long long)cRootCap.words[1]);
-//     // dc_ret = deriveCap(cRootSlot, cRootCap);
-//     // if (dc_ret.status != EXCEPTION_NONE)
-//     // {
-//     //     return dc_ret.status;
-//     // }
-//     // cRootCap = dc_ret.cap;
-
-//     // if (cap_get_capType(cRootCap) != cap_cnode_cap)
-//     // {
-//     //     userError("TCB SetSpace: Invalid CNode cap.");
-//     //     current_syscall_error.type = seL4_IllegalOperation;
-//     //     return EXCEPTION_SYSCALL_ERROR;
-//     // }
-
-//     // if (vRootData != 0)
-//     // {
-//     //     vRootCap = updateCapData(false, vRootData, vRootCap);
-//     // }
-
-//     // dc_ret = deriveCap(vRootSlot, vRootCap);
-//     // if (dc_ret.status != EXCEPTION_NONE)
-//     // {
-//     //     return dc_ret.status;
-//     // }
-//     // vRootCap = dc_ret.cap;
-
-//     // if (!isValidVTableRoot(vRootCap))
-//     // {
-//     //     userError("TCB SetSpace: Invalid VSpace cap.");
-//     //     current_syscall_error.type = seL4_IllegalOperation;
-//     //     return EXCEPTION_SYSCALL_ERROR;
-//     // }
-
-// #ifdef CONFIG_KERNEL_MCS
-//     /* fault handler */
-//     if (!validFaultHandler(fhCap))
-//     {
-//         userError("TCB SetSpace: fault endpoint cap invalid.");
-//         current_syscall_error.invalidCapNumber = 1;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-// #endif
-
-//     // setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-// #ifdef CONFIG_KERNEL_MCS
-//     return invokeTCB_ThreadControlCaps(
-//         TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
-//         fhCap, fhSlot,
-//         cap_null_cap_new(), NULL,
-//         cRootCap, cRootSlot,
-//         vRootCap, vRootSlot,
-//         0, cap_null_cap_new(), NULL, thread_control_caps_update_space | thread_control_caps_update_fault);
-// #else
-//     // cap_t cap3 = cap_null_cap_new();
-//     return process4(_cap, faultEP, slot, cRootCap, cRootSlot, vRootCap, vRootSlot, vRootData, cRootData);
-//     // return invokeTCB_ThreadControl(
-//     //     TCB_PTR(cap_thread_cap_get_capTCBPtr(cap)), slot,
-//     //     faultEP,
-//     //     NULL_PRIO, NULL_PRIO,
-//     //     cRootCap, cRootSlot,
-//     //     vRootCap, vRootSlot,
-//     //     0, cap3, NULL, thread_control_update_space);
-// #endif
-// }
-
-// exception_t decodeDomainInvocation(word_t invLabel, word_t length, word_t *buffer)
-// {
-//     word_t domain;
-//     cap_t tcap;
-
-//     if (unlikely(invLabel != DomainSetSet)) {
-//         current_syscall_error.type = seL4_IllegalOperation;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     if (unlikely(length == 0)) {
-//         userError("Domain Configure: Truncated message.");
-//         current_syscall_error.type = seL4_TruncatedMessage;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     } else {
-//         domain = getSyscallArg(0, buffer);
-//         if (domain >= numDomains) {
-//             userError("Domain Configure: invalid domain (%lu >= %u).",
-//                       domain, numDomains);
-//             current_syscall_error.type = seL4_InvalidArgument;
-//             current_syscall_error.invalidArgumentNumber = 0;
-//             return EXCEPTION_SYSCALL_ERROR;
-//         }
-//     }
-
-//     if (unlikely(current_extra_caps.excaprefs[0] == NULL)) {
-//         userError("Domain Configure: Truncated message.");
-//         current_syscall_error.type = seL4_TruncatedMessage;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     tcap = current_extra_caps.excaprefs[0]->cap;
-//     // printf("in here");
-//     if (unlikely(cap_get_capType(tcap) != cap_thread_cap)) {
-//         userError("Domain Configure: thread cap required.");
-//         current_syscall_error.type = seL4_InvalidArgument;
-//         current_syscall_error.invalidArgumentNumber = 1;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-
-//     setDomain(TCB_PTR(cap_thread_cap_get_capTCBPtr(tcap)), domain);
-//     return EXCEPTION_NONE;
-// }
-
-// exception_t decodeBindNotification(cap_t cap)
-// {
-//     notification_t *ntfnPtr;
-//     tcb_t *tcb;
-//     cap_t ntfn_cap;
-
-//     if (current_extra_caps.excaprefs[0] == NULL)
-//     {
-//         userError("TCB BindNotification: Truncated message.");
-//         current_syscall_error.type = seL4_TruncatedMessage;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-
-//     if (tcb->tcbBoundNotification)
-//     {
-//         userError("TCB BindNotification: TCB already has a bound notification.");
-//         current_syscall_error.type = seL4_IllegalOperation;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     ntfn_cap = current_extra_caps.excaprefs[0]->cap;
-
-//     if (cap_get_capType(ntfn_cap) == cap_notification_cap)
-//     {
-//         ntfnPtr = NTFN_PTR(cap_notification_cap_get_capNtfnPtr(ntfn_cap));
-//     }
-//     else
-//     {
-//         userError("TCB BindNotification: Notification is invalid.");
-//         current_syscall_error.type = seL4_IllegalOperation;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     if (!cap_notification_cap_get_capNtfnCanReceive(ntfn_cap))
-//     {
-//         userError("TCB BindNotification: Insufficient access rights");
-//         current_syscall_error.type = seL4_IllegalOperation;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
- 
-//     if ((tcb_t *)notification_ptr_get_ntfnQueue_head(ntfnPtr) || (tcb_t *)notification_ptr_get_ntfnBoundTCB(ntfnPtr))
-//     {
-//         userError("TCB BindNotification: Notification cannot be bound.");
-//         current_syscall_error.type = seL4_IllegalOperation;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-//     return invokeTCB_NotificationControl(tcb, ntfnPtr);
-// }
-
-// exception_t decodeUnbindNotification(cap_t cap)
-// {
-//     tcb_t *tcb;
-
-//     tcb = TCB_PTR(cap_thread_cap_get_capTCBPtr(cap));
-
-//     if (!tcb->tcbBoundNotification)
-//     {
-//         userError("TCB UnbindNotification: TCB already has no bound Notification.");
-//         current_syscall_error.type = seL4_IllegalOperation;
-//         return EXCEPTION_SYSCALL_ERROR;
-//     }
-
-//     setThreadState(NODE_STATE(ksCurThread), ThreadState_Restart);
-//     return invokeTCB_NotificationControl(tcb, NULL);
-// }
-
-/* The following functions sit in the preemption monad and implement the
- * preemptible, non-faulting bottom end of a TCB invocation. */
-// exception_t invokeTCB_Suspend(tcb_t *thread)
-// {
-//     suspend(thread);
-//     return EXCEPTION_NONE;
-// }
-
-// exception_t invokeTCB_Resume(tcb_t *thread)
-// {
-//     restart(thread);
-//     return EXCEPTION_NONE;
-// }
 
 #ifdef CONFIG_KERNEL_MCS
-// static inline exception_t installTCBCap(tcb_t *target, cap_t tCap, cte_t *slot,
-//                                         tcb_cnode_index_t index, cap_t newCap, cte_t *srcSlot)
-// {
-//     cte_t *rootSlot = TCB_PTR_CTE_PTR(target, index);
-//     UNUSED exception_t e = cteDelete(rootSlot, true);
-//     if (e != EXCEPTION_NONE)
-//     {
-//         return e;
-//     }
 
-//     /* cteDelete on a cap installed in the tcb cannot fail */
-//     if (sameObjectAs(newCap, srcSlot->cap) &&
-//         sameObjectAs(tCap, slot->cap))
-//     {
-//         cteInsert(newCap, srcSlot, rootSlot);
-//     }
-//     return e;
-// }
 #endif
 
 #ifdef CONFIG_KERNEL_MCS
-// exception_t invokeTCB_ThreadControlCaps(tcb_t *target, cte_t *slot,
-//                                         cap_t fh_newCap, cte_t *fh_srcSlot,
-//                                         cap_t th_newCap, cte_t *th_srcSlot,
-//                                         cap_t cRoot_newCap, cte_t *cRoot_srcSlot,
-//                                         cap_t vRoot_newCap, cte_t *vRoot_srcSlot,
-//                                         word_t bufferAddr, cap_t bufferCap,
-//                                         cte_t *bufferSrcSlot,
-//                                         thread_control_flag_t updateFlags)
-// {
-//     exception_t e;
-//     cap_t tCap = cap_thread_cap_new((word_t)target);
+exception_t invokeTCB_ThreadControlCaps(tcb_t *target, cte_t *slot,
+                                        cap_t fh_newCap, cte_t *fh_srcSlot,
+                                        cap_t th_newCap, cte_t *th_srcSlot,
+                                        cap_t cRoot_newCap, cte_t *cRoot_srcSlot,
+                                        cap_t vRoot_newCap, cte_t *vRoot_srcSlot,
+                                        word_t bufferAddr, cap_t bufferCap,
+                                        cte_t *bufferSrcSlot,
+                                        thread_control_flag_t updateFlags)
+{
+    exception_t e;
+    cap_t tCap = cap_thread_cap_new((word_t)target);
 
-//     if (updateFlags & thread_control_caps_update_fault)
-//     {
-//         e = installTCBCap(target, tCap, slot, tcbFaultHandler, fh_newCap, fh_srcSlot);
-//         if (e != EXCEPTION_NONE)
-//         {
-//             return e;
-//         }
-//     }
+    if (updateFlags & thread_control_caps_update_fault)
+    {
+        e = installTCBCap(target, tCap, slot, tcbFaultHandler, fh_newCap, fh_srcSlot);
+        if (e != EXCEPTION_NONE)
+        {
+            return e;
+        }
+    }
 
-//     if (updateFlags & thread_control_caps_update_timeout)
-//     {
-//         e = installTCBCap(target, tCap, slot, tcbTimeoutHandler, th_newCap, th_srcSlot);
-//         if (e != EXCEPTION_NONE)
-//         {
-//             return e;
-//         }
-//     }
+    if (updateFlags & thread_control_caps_update_timeout)
+    {
+        e = installTCBCap(target, tCap, slot, tcbTimeoutHandler, th_newCap, th_srcSlot);
+        if (e != EXCEPTION_NONE)
+        {
+            return e;
+        }
+    }
 
-//     if (updateFlags & thread_control_caps_update_space)
-//     {
-//         e = installTCBCap(target, tCap, slot, tcbCTable, cRoot_newCap, cRoot_srcSlot);
-//         if (e != EXCEPTION_NONE)
-//         {
-//             return e;
-//         }
+    if (updateFlags & thread_control_caps_update_space)
+    {
+        e = installTCBCap(target, tCap, slot, tcbCTable, cRoot_newCap, cRoot_srcSlot);
+        if (e != EXCEPTION_NONE)
+        {
+            return e;
+        }
 
-//         e = installTCBCap(target, tCap, slot, tcbVTable, vRoot_newCap, vRoot_srcSlot);
-//         if (e != EXCEPTION_NONE)
-//         {
-//             return e;
-//         }
-//     }
+        e = installTCBCap(target, tCap, slot, tcbVTable, vRoot_newCap, vRoot_srcSlot);
+        if (e != EXCEPTION_NONE)
+        {
+            return e;
+        }
+    }
 
-//     if (updateFlags & thread_control_caps_update_ipc_buffer)
-//     {
-//         cte_t *bufferSlot;
+    if (updateFlags & thread_control_caps_update_ipc_buffer)
+    {
+        cte_t *bufferSlot;
 
-//         bufferSlot = TCB_PTR_CTE_PTR(target, tcbBuffer);
-//         e = cteDelete(bufferSlot, true);
-//         if (e != EXCEPTION_NONE)
-//         {
-//             return e;
-//         }
-//         target->tcbIPCBuffer = bufferAddr;
+        bufferSlot = TCB_PTR_CTE_PTR(target, tcbBuffer);
+        e = cteDelete(bufferSlot, true);
+        if (e != EXCEPTION_NONE)
+        {
+            return e;
+        }
+        target->tcbIPCBuffer = bufferAddr;
 
-//         if (bufferSrcSlot && sameObjectAs(bufferCap, bufferSrcSlot->cap) &&
-//             sameObjectAs(tCap, slot->cap))
-//         {
-//             cteInsert(bufferCap, bufferSrcSlot, bufferSlot);
-//         }
+        if (bufferSrcSlot && sameObjectAs(bufferCap, bufferSrcSlot->cap) &&
+            sameObjectAs(tCap, slot->cap))
+        {
+            cteInsert(bufferCap, bufferSrcSlot, bufferSlot);
+        }
 
-//         if (target == NODE_STATE(ksCurThread))
-//         {
-//             rescheduleRequired();
-//         }
-//     }
+        if (target == NODE_STATE(ksCurThread))
+        {
+            rescheduleRequired();
+        }
+    }
 
-//     return EXCEPTION_NONE;
-// }
+    return EXCEPTION_NONE;
+}
 #else
-// exception_t invokeTCB_ThreadControl(tcb_t *target, cte_t *slot,
-//                                     cptr_t faultep, prio_t mcp, prio_t priority,
-//                                     cap_t cRoot_newCap, cte_t *cRoot_srcSlot,
-//                                     cap_t vRoot_newCap, cte_t *vRoot_srcSlot,
-//                                     word_t bufferAddr, cap_t bufferCap,
-//                                     cte_t *bufferSrcSlot,
-//                                     thread_control_flag_t updateFlags)
-// {
-//     exception_t e;
-//     cap_t tCap = cap_thread_cap_new((word_t)target);
 
-//     if (updateFlags & thread_control_update_space)
-//     {
-//         target->tcbFaultHandler = faultep;
-//     }
-
-//     if (updateFlags & thread_control_update_mcp)
-//     {
-//         setMCPriority(target, mcp);
-//     }
-
-//     if (updateFlags & thread_control_update_space)
-//     {
-//         cte_t *rootSlot;
-
-//         rootSlot = TCB_PTR_CTE_PTR(target, tcbCTable);
-//         e = cteDelete(rootSlot, true);
-//         if (e != EXCEPTION_NONE)
-//         {
-//             return e;
-//         }
-//         if (sameObjectAs(cRoot_newCap, cRoot_srcSlot->cap) &&
-//             sameObjectAs(tCap, slot->cap))
-//         {
-//             cteInsert(cRoot_newCap, cRoot_srcSlot, rootSlot);
-//         }
-//     }
-
-//     if (updateFlags & thread_control_update_space)
-//     {
-//         cte_t *rootSlot;
-
-//         rootSlot = TCB_PTR_CTE_PTR(target, tcbVTable);
-//         e = cteDelete(rootSlot, true);
-//         if (e != EXCEPTION_NONE)
-//         {
-//             return e;
-//         }
-//         if (sameObjectAs(vRoot_newCap, vRoot_srcSlot->cap) &&
-//             sameObjectAs(tCap, slot->cap))
-//         {
-//             cteInsert(vRoot_newCap, vRoot_srcSlot, rootSlot);
-//         }
-//     }
-
-//     if (updateFlags & thread_control_update_ipc_buffer)
-//     {
-//         cte_t *bufferSlot;
-
-//         bufferSlot = TCB_PTR_CTE_PTR(target, tcbBuffer);
-//         e = cteDelete(bufferSlot, true);
-//         if (e != EXCEPTION_NONE)
-//         {
-//             return e;
-//         }
-//         target->tcbIPCBuffer = bufferAddr;
-
-//         if (bufferSrcSlot && sameObjectAs(bufferCap, bufferSrcSlot->cap) &&
-//             sameObjectAs(tCap, slot->cap))
-//         {
-//             cteInsert(bufferCap, bufferSrcSlot, bufferSlot);
-//         }
-
-//         if (target == NODE_STATE(ksCurThread))
-//         {
-//             rescheduleRequired();
-//         }
-//     }
-
-//     if (updateFlags & thread_control_update_priority)
-//     {
-//         setPriority(target, priority);
-//     }
-
-//     return EXCEPTION_NONE;
-// }
 #endif
 
 #ifdef CONFIG_KERNEL_MCS
@@ -2033,188 +732,7 @@ exception_t invokeTCB_ThreadControlSched(tcb_t *target, cte_t *slot,
 }
 #endif
 
-// exception_t invokeTCB_CopyRegisters(tcb_t *dest, tcb_t *tcb_src,
-//                                     bool_t suspendSource, bool_t resumeTarget,
-//                                     bool_t transferFrame, bool_t transferInteger,
-//                                     word_t transferArch)
-// {
-//     if (suspendSource) {
-//         suspend(tcb_src);
-//     }
 
-//     if (resumeTarget) {
-//         restart(dest);
-//     }
-
-//     if (transferFrame) {
-//         word_t i;
-//         word_t v;
-//         word_t pc;
-
-//         for (i = 0; i < n_frameRegisters; i++) {
-//             v = getRegister(tcb_src, frameRegisters[i]);
-//             setRegister(dest, frameRegisters[i], v);
-//         }
-
-//         pc = getRestartPC(dest);
-//         setNextPC(dest, pc);
-//     }
-
-//     if (transferInteger) {
-//         word_t i;
-//         word_t v;
-
-//         for (i = 0; i < n_gpRegisters; i++) {
-//             v = getRegister(tcb_src, gpRegisters[i]);
-//             setRegister(dest, gpRegisters[i], v);
-//         }
-//     }
-
-//     Arch_postModifyRegisters(dest);
-
-//     if (dest == NODE_STATE(ksCurThread)) {
-//         /* If we modified the current thread we may need to reschedule
-//          * due to changing registers are only reloaded in Arch_switchToThread */
-//         rescheduleRequired();
-//     }
-
-//     return Arch_performTransfer(transferArch, tcb_src, dest);
-// }
-
-/* ReadRegisters is a special case: replyFromKernel & setMRs are
- * unfolded here, in order to avoid passing the large reply message up
- * to the top level in a global (and double-copying). We prevent the
- * top-level replyFromKernel_success_empty() from running by setting the
- * thread state. Retype does this too.
- */
-// exception_t invokeTCB_ReadRegisters(tcb_t *tcb_src, bool_t suspendSource,
-//                                     word_t n, word_t arch, bool_t call)
-// {
-//     word_t i, j;
-//     exception_t e;
-//     tcb_t *thread;
-
-//     thread = NODE_STATE(ksCurThread);
-
-//     if (suspendSource) {
-//         suspend(tcb_src);
-//     }
-
-//     e = Arch_performTransfer(arch, tcb_src, NODE_STATE(ksCurThread));
-//     if (e != EXCEPTION_NONE) {
-//         return e;
-//     }
-
-//     if (call) {
-//         word_t *ipcBuffer;
-
-//         ipcBuffer = lookupIPCBuffer(true, thread);
-
-//         setRegister(thread, badgeRegister, 0);
-
-//         for (i = 0; i < n && i < n_frameRegisters && i < n_msgRegisters; i++) {
-//             setRegister(thread, msgRegisters[i],
-//                         getRegister(tcb_src, frameRegisters[i]));
-//         }
-
-//         if (ipcBuffer != NULL && i < n && i < n_frameRegisters) {
-//             for (; i < n && i < n_frameRegisters; i++) {
-//                 ipcBuffer[i + 1] = getRegister(tcb_src, frameRegisters[i]);
-//             }
-//         }
-
-//         j = i;
-
-//         for (i = 0; i < n_gpRegisters && i + n_frameRegisters < n
-//              && i + n_frameRegisters < n_msgRegisters; i++) {
-//             setRegister(thread, msgRegisters[i + n_frameRegisters],
-//                         getRegister(tcb_src, gpRegisters[i]));
-//         }
-
-//         if (ipcBuffer != NULL && i < n_gpRegisters
-//             && i + n_frameRegisters < n) {
-//             for (; i < n_gpRegisters && i + n_frameRegisters < n; i++) {
-//                 ipcBuffer[i + n_frameRegisters + 1] =
-//                     getRegister(tcb_src, gpRegisters[i]);
-//             }
-//         }
-
-//         setRegister(thread, msgInfoRegister, wordFromMessageInfo(
-//                         seL4_MessageInfo_new(0, 0, 0, i + j)));
-//     }
-//     setThreadState(thread, ThreadState_Running);
-
-//     return EXCEPTION_NONE;
-// }
-// void process3(tcb_t *dest, bool_t resumeTarget,
-//               word_t n, word_t arch, word_t *buffer);
-// exception_t invokeTCB_WriteRegisters(tcb_t *dest, bool_t resumeTarget,
-//                                      word_t n, word_t arch, word_t *buffer)
-// {
-//     // word_t i;
-//     word_t pc;
-//     exception_t e;
-//     // bool_t archInfo;
-
-//     e = Arch_performTransfer(arch, NODE_STATE(ksCurThread), dest);
-//     if (e != EXCEPTION_NONE)
-//     {
-//         return e;
-//     }
-
-//     // if (n > n_frameRegisters + n_gpRegisters) {
-//     //     n = n_frameRegisters + n_gpRegisters;
-//     // }
-
-//     // archInfo = Arch_getSanitiseRegisterInfo(dest);
-
-//     // for (i = 0; i < n_frameRegisters && i < n; i++) {
-//     //     /* Offset of 2 to get past the initial syscall arguments */
-//     //     setRegister(dest, frameRegisters[i],
-//     //                 sanitiseRegister(frameRegisters[i],
-//     //                                  getSyscallArg(i + 2, buffer), archInfo));
-//     // }
-
-//     // for (i = 0; i < n_gpRegisters && i + n_frameRegisters < n; i++) {
-//     //     setRegister(dest, gpRegisters[i],
-//     //                 sanitiseRegister(gpRegisters[i],
-//     //                                  getSyscallArg(i + n_frameRegisters + 2,
-//     //                                                buffer), archInfo));
-//     // }
-//     process3(dest, resumeTarget, n, arch, buffer);
-//     pc = getRestartPC(dest);
-//     setNextPC(dest, pc);
-
-//     Arch_postModifyRegisters(dest);
-
-//     if (resumeTarget)
-//     {
-//         restart(dest);
-//     }
-
-//     if (dest == NODE_STATE(ksCurThread))
-//     {
-//         /* If we modified the current thread we may need to reschedule
-//          * due to changing registers are only reloaded in Arch_switchToThread */
-//         rescheduleRequired();
-//     }
-
-//     return EXCEPTION_NONE;
-// }
-
-// exception_t invokeTCB_NotificationControl(tcb_t *tcb, notification_t *ntfnPtr)
-// {
-//     if (ntfnPtr)
-//     {
-//         bindNotification(tcb, ntfnPtr);
-//     }
-//     else
-//     {
-//         unbindNotification(tcb);
-//     }
-
-//     return EXCEPTION_NONE;
-// }
 
 #ifdef CONFIG_DEBUG_BUILD
 void setThreadName(tcb_t *tcb, const char *name)
@@ -2223,43 +741,3 @@ void setThreadName(tcb_t *tcb, const char *name)
 }
 #endif
 
-// word_t setMRs_syscall_error(tcb_t *thread, word_t *receiveIPCBuffer)
-// {
-//     switch (current_syscall_error.type) {
-//     case seL4_InvalidArgument:
-//         return setMR(thread, receiveIPCBuffer, 0,
-//                      current_syscall_error.invalidArgumentNumber);
-
-//     case seL4_InvalidCapability:
-//         return setMR(thread, receiveIPCBuffer, 0,
-//                      current_syscall_error.invalidCapNumber);
-
-//     case seL4_IllegalOperation:
-//         return 0;
-
-//     case seL4_RangeError:
-//         setMR(thread, receiveIPCBuffer, 0,
-//               current_syscall_error.rangeErrorMin);
-//         return setMR(thread, receiveIPCBuffer, 1,
-//                      current_syscall_error.rangeErrorMax);
-
-//     case seL4_AlignmentError:
-//         return 0;
-
-//     case seL4_FailedLookup:
-//         setMR(thread, receiveIPCBuffer, 0,
-//               current_syscall_error.failedLookupWasSource ? 1 : 0);
-//         return setMRs_lookup_failure(thread, receiveIPCBuffer,
-//                                      current_lookup_fault, 1);
-
-//     case seL4_TruncatedMessage:
-//     case seL4_DeleteFirst:
-//     case seL4_RevokeFirst:
-//         return 0;
-//     case seL4_NotEnoughMemory:
-//         return setMR(thread, receiveIPCBuffer, 0,
-//                      current_syscall_error.memoryLeft);
-//     default:
-//         fail("Invalid syscall error");
-//     }
-// }

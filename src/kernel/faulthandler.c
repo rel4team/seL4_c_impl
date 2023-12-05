@@ -50,55 +50,7 @@ bool_t sendFaultIPC(tcb_t *tptr, cap_t handlerCap, bool_t can_donate)
 }
 #else
 
-// void handleFault(tcb_t *tptr)
-// {
-//     exception_t status;
-//     seL4_Fault_t fault = current_fault;
 
-//     status = sendFaultIPC(tptr);
-//     if (status != EXCEPTION_NONE) {
-//         handleDoubleFault(tptr, fault);
-//     }
-// }
-
-// exception_t sendFaultIPC(tcb_t *tptr)
-// {
-//     cptr_t handlerCPtr;
-//     cap_t  handlerCap;
-//     lookupCap_ret_t lu_ret;
-//     lookup_fault_t original_lookup_fault;
-
-//     original_lookup_fault = current_lookup_fault;
-
-//     handlerCPtr = tptr->tcbFaultHandler;
-//     lu_ret = lookupCap(tptr, handlerCPtr);
-//     if (lu_ret.status != EXCEPTION_NONE) {
-//         current_fault = seL4_Fault_CapFault_new(handlerCPtr, false);
-//         return EXCEPTION_FAULT;
-//     }
-//     handlerCap = lu_ret.cap;
-
-//     if (cap_get_capType(handlerCap) == cap_endpoint_cap &&
-//         cap_endpoint_cap_get_capCanSend(handlerCap) &&
-//         (cap_endpoint_cap_get_capCanGrant(handlerCap) ||
-//          cap_endpoint_cap_get_capCanGrantReply(handlerCap))) {
-//         tptr->tcbFault = current_fault;
-//         if (seL4_Fault_get_seL4_FaultType(current_fault) == seL4_Fault_CapFault) {
-//             tptr->tcbLookupFailure = original_lookup_fault;
-//         }
-//         sendIPC(true, true,
-//                 cap_endpoint_cap_get_capEPBadge(handlerCap),
-//                 cap_endpoint_cap_get_capCanGrant(handlerCap), true, tptr,
-//                 EP_PTR(cap_endpoint_cap_get_capEPPtr(handlerCap)));
-
-//         return EXCEPTION_NONE;
-//     } else {
-//         current_fault = seL4_Fault_CapFault_new(handlerCPtr, false);
-//         current_lookup_fault = lookup_fault_missing_capability_new(0);
-
-//         return EXCEPTION_FAULT;
-//     }
-// }
 #endif
 
 #ifdef CONFIG_PRINTING
@@ -141,32 +93,3 @@ bool_t sendFaultIPC(tcb_t *tptr, cap_t handlerCap, bool_t can_donate)
 }
 #endif
 
-// #ifdef CONFIG_KERNEL_MCS
-// void handleNoFaultHandler(tcb_t *tptr)
-// #else
-// /* The second fault, ex2, is stored in the global current_fault */
-// void handleDoubleFault(tcb_t *tptr, seL4_Fault_t ex1)
-// #endif
-// {
-// #ifdef CONFIG_PRINTING
-// #ifdef CONFIG_KERNEL_MCS
-//     printf("Found thread has no fault handler while trying to handle:\n");
-//     print_fault(current_fault);
-// #else
-//     seL4_Fault_t ex2 = current_fault;
-//     printf("Caught ");
-//     print_fault(ex2);
-//     printf("\nwhile trying to handle:\n");
-//     print_fault(ex1);
-// #endif
-// #ifdef CONFIG_DEBUG_BUILD
-//     printf("\nin thread %p \"%s\" ", tptr, TCB_PTR_DEBUG_PTR(tptr)->tcbName);
-// #endif /* CONFIG_DEBUG_BUILD */
-
-//     printf("at address %p\n", (void *)getRestartPC(tptr));
-//     printf("With stack:\n");
-//     Arch_userStackTrace(tptr);
-// #endif
-
-//     setThreadState(tptr, ThreadState_Inactive);
-// }
