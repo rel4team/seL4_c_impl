@@ -11,6 +11,11 @@ config_option(
     DEFAULT OFF
 )
 
+config_option(
+    KernelIsAsync ASYNC_SYSCALL "Use the Async kernel configuration, which is not verified."
+    DEFAULT OFF
+)
+
 # Error for unsupported MCS platforms
 if(KernelIsMCS AND (NOT KernelPlatformSupportsMCS))
     message(

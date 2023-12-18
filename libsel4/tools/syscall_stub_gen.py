@@ -253,6 +253,7 @@ def init_data_types(wordsize):
         CapType("seL4_TCB", wordsize),
         CapType("seL4_Untyped", wordsize),
         CapType("seL4_DomainSet", wordsize),
+        CapType("seL4_Executor", wordsize),
         CapType("seL4_SchedContext", wordsize),
         CapType("seL4_SchedControl", wordsize),
     ]

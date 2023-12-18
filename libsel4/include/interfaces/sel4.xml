@@ -1334,6 +1334,35 @@
         </method>
     </interface>
 
+    <interface name="seL4_Executor" manual_name="Async syscall executor" cap_description="The async runtime for async syscall.">
+
+        <method id="ExecutorExecute" name="Execute" manual_name="Execute" manual_label="executor_execute">
+        <condition><config var="CONFIG_ASYNC_SYSCALL"/></condition>
+            <brief>
+                Submit the async syscall.
+            </brief>
+            <description>
+                <docref>See <autoref label="sec:domains"/>.</docref>
+            </description>
+            <error name="seL4_IllegalOperation">
+                <description>
+                    The <texttt text="_service"/> is a CPtr to a capability of the wrong type.
+                </description>
+            </error>
+            <error name="seL4_InvalidArgument">
+                <description>
+                    The <texttt text="domain"/> is greater than <texttt text="CONFIG_NUM_DOMAINS"/>.
+                    Or, <texttt text="thread"/> is a CPtr to a capability of the wrong type.
+                </description>
+            </error>
+            <error name="seL4_InvalidCapability">
+                <description>
+                    The <texttt text="_service"/> is a CPtr to a capability of the wrong type.
+                </description>
+            </error>
+        </method>
+    </interface>
+
     <interface name="seL4_SchedControl">
 
         <method id="SchedControlConfigureFlags" name="ConfigureFlags" manual_name="ConfigureFlags" manual_label="schedcontrol_configureflags">
