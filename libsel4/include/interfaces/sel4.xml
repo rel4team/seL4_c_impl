@@ -1342,8 +1342,11 @@
                 Submit the async syscall.
             </brief>
             <description>
-                <docref>See <autoref label="sec:domains"/>.</docref>
+                <docref>See <autoref label="sec:async syscall"/>.</docref>
             </description>
+            <param dir="in" name="req_buf" type="seL4_CPtr" description="Capability to the Request Buffer."/>
+            <param dir="in" name="res_buf" type="seL4_CPtr" description="Capability to the Result Buffer."/>
+            <param dir="in" name="req_num" type="seL4_Word" description="The number of async syscall."/>
             <error name="seL4_IllegalOperation">
                 <description>
                     The <texttt text="_service"/> is a CPtr to a capability of the wrong type.
