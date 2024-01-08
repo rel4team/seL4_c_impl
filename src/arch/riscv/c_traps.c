@@ -21,6 +21,7 @@
 /** DONT_TRANSLATE */
 void VISIBLE NORETURN restore_user_context(void)
 {
+    setVMRoot(NODE_STATE(ksCurThread));
     word_t cur_thread_reg = (word_t) NODE_STATE(ksCurThread)->tcbArch.tcbContext.registers;
     c_exit_hook();
     NODE_UNLOCK_IF_HELD;
