@@ -22,6 +22,7 @@
 .extern c_handle_fastpath_call
 .extern c_handle_interrupt
 .extern c_handle_exception
+.extern kernel_root_pageTable
 
 trap_entry:
 
@@ -99,6 +100,21 @@ trap_entry:
   /* Save exception PC */
   csrr x1,  sepc
   STORE   x1, (33*REGBYTES)(t0)
+
+  STORE a1, (-1*REGBYTES)(sp)
+  STORE a2, (-2*REGBYTES)(sp)
+
+  la    a1, kernel_root_pageTable
+  li    a2, 0xffffffff00000000
+  sub   a1, a1, a2
+  srli  a1, a1, 12
+  li    a2, 8 << 60
+  or    a1, a1, a2
+  csrw  satp, a1
+  sfence.vma
+
+  LOAD  a1, (-1*REGBYTES)(sp)
+  LOAD  a2, (-2*REGBYTES)(sp)
 
   /* Check if it's an interrupt */
   bltz s0, interrupt
