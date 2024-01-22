@@ -42,6 +42,8 @@ typedef seL4_CPtr seL4_Executor;
 typedef seL4_CPtr seL4_SchedContext;
 typedef seL4_CPtr seL4_SchedControl;
 
+typedef seL4_CPtr seL4_Uint_Notification;
+
 typedef seL4_Uint64 seL4_Time;
 
 #define seL4_NilData 0

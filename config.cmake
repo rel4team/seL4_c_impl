@@ -12,6 +12,11 @@ config_option(
 )
 
 config_option(
+    KernelIsUintr UINTR "Use the Async kernel configuration, which is not verified."
+    DEFAULT OFF
+)
+
+config_option(
     KernelIsAsync ASYNC_SYSCALL "Use the Async kernel configuration, which is not verified."
     DEFAULT OFF
 )

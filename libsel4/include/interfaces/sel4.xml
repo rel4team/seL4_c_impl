@@ -1334,19 +1334,43 @@
         </method>
     </interface>
 
-    <interface name="seL4_Executor" manual_name="Async syscall executor" cap_description="The async runtime for async syscall.">
+    <interface name="seL4_Uint_Notification" manual_name="seL4 uintr notification" cap_description="none">
 
-        <method id="ExecutorExecute" name="Execute" manual_name="Execute" manual_label="executor_execute">
-        <condition><config var="CONFIG_ASYNC_SYSCALL"/></condition>
+        <method id="UintrRegisterSender" name="register_sender" manual_name="register_sender" manual_label="register_sender">
+        <condition><config var="CONFIG_UINTR"/></condition>
             <brief>
-                Submit the async syscall.
+                seL4 uintr notification register sender
             </brief>
             <description>
-                <docref>See <autoref label="sec:async syscall"/>.</docref>
+                <docref>See <autoref label="sec:domains"/>.</docref>
             </description>
-            <param dir="in" name="req_buf" type="seL4_CPtr" description="Capability to the Request Buffer."/>
-            <param dir="in" name="res_buf" type="seL4_CPtr" description="Capability to the Result Buffer."/>
-            <param dir="in" name="req_num" type="seL4_Word" description="The number of async syscall."/>
+            <error name="seL4_IllegalOperation">
+                <description>
+                    The <texttt text="_service"/> is a CPtr to a capability of the wrong type.
+                </description>
+            </error>
+            <error name="seL4_InvalidArgument">
+                <description>
+                    The <texttt text="domain"/> is greater than <texttt text="CONFIG_NUM_DOMAINS"/>.
+                    Or, <texttt text="thread"/> is a CPtr to a capability of the wrong type.
+                </description>
+            </error>
+            <error name="seL4_InvalidCapability">
+                <description>
+                    The <texttt text="_service"/> is a CPtr to a capability of the wrong type.
+                </description>
+            </error>
+        </method>
+
+        <method id="UintrRegisterReceiver" name="register_receiver" manual_name="register_receiver" manual_label="register_receiver">
+        <condition><config var="CONFIG_UINTR"/></condition>
+            <brief>
+                seL4 uintr notification register receiver
+            </brief>
+            <description>
+                <docref>See <autoref label="sec:domains"/>.</docref>
+            </description>
+            <param dir="in" name="thread" type="seL4_TCB" description="Capability to the TCB which is being operated on."/>
             <error name="seL4_IllegalOperation">
                 <description>
                     The <texttt text="_service"/> is a CPtr to a capability of the wrong type.

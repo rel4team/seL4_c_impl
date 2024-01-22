@@ -17,6 +17,7 @@ typedef struct seL4_IPCBuffer_ {
     seL4_CPtr receiveIndex;
     seL4_Word receiveDepth;
     seL4_Word uintr_flag;
+    seL4_Word rt_addr;
 } seL4_IPCBuffer __attribute__((__aligned__(sizeof(struct seL4_IPCBuffer_))));
 
 typedef enum {
