@@ -17,7 +17,8 @@
 *.blg
 *.toc
 *.mpx
-
+build/*
+install/*
 tools/parsetab.py
 manual/env.tex
 manual/manual.pdf
