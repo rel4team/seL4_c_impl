@@ -279,6 +279,7 @@ void setIRQTrigger(irq_t irq, bool_t trigger);
 #ifdef ENABLE_SMP_SUPPORT
 #define irq_remote_call_ipi     (INTERRUPT_IPI_0)
 #define irq_reschedule_ipi      (INTERRUPT_IPI_1)
+#define irq_async_syscall_ipi   (INTERRUPT_IPI_2)
 
 static inline void arch_pause(void)
 {

@@ -1388,6 +1388,32 @@
                 </description>
             </error>
         </method>
+        <method id="UintrRegisterAyncSyscall" name="register_async_syscall" manual_name="register_async_syscall" manual_label="register_async_syscall">
+        <condition><config var="CONFIG_UINTR"/></condition>
+            <brief>
+                seL4 uintr notification register async_syscall
+            </brief>
+            <description>
+                <docref>See <autoref label="sec:domains"/>.</docref>
+            </description>
+            <param dir="in" name="new_buffer" type="seL4_CPtr" description="Capability to the new buffer frame which stores syscall req and result"/>
+            <error name="seL4_IllegalOperation">
+                <description>
+                    The <texttt text="_service"/> is a CPtr to a capability of the wrong type.
+                </description>
+            </error>
+            <error name="seL4_InvalidArgument">
+                <description>
+                    The <texttt text="domain"/> is greater than <texttt text="CONFIG_NUM_DOMAINS"/>.
+                    Or, <texttt text="thread"/> is a CPtr to a capability of the wrong type.
+                </description>
+            </error>
+            <error name="seL4_InvalidCapability">
+                <description>
+                    The <texttt text="_service"/> is a CPtr to a capability of the wrong type.
+                </description>
+            </error>
+        </method>
     </interface>
 
     <interface name="seL4_SchedControl">
