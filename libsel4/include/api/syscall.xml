@@ -51,6 +51,10 @@
             <syscall name="DebugNameThread"/>
         </config>
         <config>
+            <condition><config var="CONFIG_UINTR"/></condition>
+            <syscall name="WakeSyscallHandler" />
+        </config>
+        <config>
             <condition>
                 <and>
                     <config var="CONFIG_DEBUG_BUILD"/>
