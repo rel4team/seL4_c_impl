@@ -47,6 +47,15 @@ extern irq_state_t intStateIRQTable[];
 extern char kernel_stack_alloc[CONFIG_MAX_NUM_NODES][BIT(CONFIG_KERNEL_STACK_BITS)];
 void pRegsToR(word_t *, word_t);
 void intStateIRQNodeToR(word_t*);
+
+static const p_region_t BOOT_RODATA avail_p_regs2[] = {
+    {
+        .start = 0x80200000,
+        .end   = 0x84000000
+    },
+};
+
+
 BOOT_CODE VISIBLE void init_kernel(
     paddr_t ui_p_reg_start,
     paddr_t ui_p_reg_end,
@@ -65,7 +74,7 @@ BOOT_CODE VISIBLE void init_kernel(
     printf("CONFIG_DEBUG_BUILD\n");
     #endif
     bool_t result;
-    pRegsToR((word_t *)avail_p_regs, ARRAY_SIZE(avail_p_regs));
+    pRegsToR((word_t *)avail_p_regs2, ARRAY_SIZE(avail_p_regs2));
     intStateIRQNodeToR((word_t*)intStateIRQNode);
 #ifdef ENABLE_SMP_SUPPORT
     add_hart_to_core_map(hart_id, core_id);
