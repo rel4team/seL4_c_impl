@@ -46,3 +46,47 @@ exception_t decodeARMMMUInvocation(word_t invLabel, word_t length, cptr_t cptr,
 void Arch_userStackTrace(tcb_t *tptr);
 #endif
 
+// MiDev Modifications
+
+
+struct lookupPGDSlot_ret {
+    exception_t status;
+    pgde_t *pgdSlot;
+};
+typedef struct lookupPGDSlot_ret lookupPGDSlot_ret_t;
+
+struct lookupPUDSlot_ret {
+    exception_t status;
+    pude_t *pudSlot;
+};
+typedef struct lookupPUDSlot_ret lookupPUDSlot_ret_t;
+
+struct lookupPDSlot_ret {
+    exception_t status;
+    pde_t *pdSlot;
+};
+typedef struct lookupPDSlot_ret lookupPDSlot_ret_t;
+
+struct lookupPTSlot_ret {
+    exception_t status;
+    pte_t *ptSlot;
+};
+typedef struct lookupPTSlot_ret lookupPTSlot_ret_t;
+
+struct lookupFrame_ret {
+    paddr_t frameBase;
+    vm_page_size_t frameSize;
+    bool_t valid;
+};
+typedef struct lookupFrame_ret lookupFrame_ret_t;
+
+struct findVSpaceForASID_ret {
+    exception_t status;
+    vspace_root_t *vspace_root;
+};
+typedef struct findVSpaceForASID_ret findVSpaceForASID_ret_t;
+
+lookupPUDSlot_ret_t lookupPUDSlot(vspace_root_t *vspace, vptr_t vptr);
+lookupPGDSlot_ret_t lookupPGDSlot(vspace_root_t *vspace, vptr_t vptr);
+findVSpaceForASID_ret_t findVSpaceForASID(asid_t asid);
+lookupPDSlot_ret_t lookupPDSlot(vspace_root_t *vspace, vptr_t vptr);

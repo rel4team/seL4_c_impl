@@ -11,6 +11,7 @@ add_sources(
         src/inlines.c
         src/assert.c
         src/util.c
+        src/test.c
         src/string.c
         src/fastpath/fastpath.c
         src/api/syscall.c

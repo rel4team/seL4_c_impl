@@ -102,6 +102,7 @@ __attribute__((unused)) BOOT_CODE static void init_irqs(cap_t root_cnode_cap)
 
     for (i = 0; i <= maxIRQ; i++)
     {
+        // Is this just for verification purposes?
         if (i != irqInvalid)
         {
             /* IRQ 0 is irqInvalid */

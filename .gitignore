@@ -27,3 +27,9 @@ manual/generated
 
 # Emacs backups
 *~
+
+# Ignore build folder
+build/
+install/
+.idea/
+cmake-build-debug/

@@ -194,18 +194,18 @@ static inline void maskInterrupt(bool_t disable, irq_t irq)
     }
 }
 
-static inline void ackInterrupt(irq_t irq)
-{
-    assert(IS_IRQ_VALID(active_irq[CURRENT_CPU_INDEX()])
-           && (active_irq[CURRENT_CPU_INDEX()] & IRQ_MASK) == IRQT_TO_IRQ(irq));
-    if (is_irq_edge_triggered(IRQT_TO_IRQ(irq))) {
-        dist_pending_clr(IRQT_TO_IRQ(irq));
-    }
-    gic_cpuiface->eoi = active_irq[CURRENT_CPU_INDEX()];
-    active_irq[CURRENT_CPU_INDEX()] = IRQ_NONE;
+// static inline void ackInterrupt(irq_t irq)
+// {
+//     assert(IS_IRQ_VALID(active_irq[CURRENT_CPU_INDEX()])
+//            && (active_irq[CURRENT_CPU_INDEX()] & IRQ_MASK) == IRQT_TO_IRQ(irq));
+//     if (is_irq_edge_triggered(IRQT_TO_IRQ(irq))) {
+//         dist_pending_clr(IRQT_TO_IRQ(irq));
+//     }
+//     gic_cpuiface->eoi = active_irq[CURRENT_CPU_INDEX()];
+//     active_irq[CURRENT_CPU_INDEX()] = IRQ_NONE;
 
-}
-
+// }
+void ackInterrupt(irq_t irq);
 
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
 

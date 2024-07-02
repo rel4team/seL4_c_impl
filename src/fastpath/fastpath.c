@@ -12,10 +12,10 @@
 #endif
 #include <benchmark/benchmark_utilisation.h>
 
-#ifdef CONFIG_ARCH_ARM
-static inline
-FORCE_INLINE
-#endif
+// #ifdef CONFIG_ARCH_ARM
+// static inline
+// FORCE_INLINE
+// #endif
 void NORETURN fastpath_call(word_t cptr, word_t msgInfo);
 // void NORETURN fastpath_call(word_t cptr, word_t msgInfo)
 // {
@@ -233,11 +233,10 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo);
 //     fastpath_restore(badge, msgInfo, NODE_STATE(ksCurThread));
 // }
 
-#ifdef CONFIG_ARCH_ARM
-static inline
-FORCE_INLINE
-
-#endif
+// #ifdef CONFIG_ARCH_ARM
+// static inline
+// FORCE_INLINE
+// #endif
 void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo);
 // #ifdef CONFIG_KERNEL_MCS
 // void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo, word_t reply)
