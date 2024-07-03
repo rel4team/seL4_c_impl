@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/include/arch/arm",
+                "${workspaceFolder}/include/arch/arm/arch/64",
+                "${workspaceFolder}/build/generated",
+                "${workspaceFolder}/build/gen_config",
+                "${workspaceFolder}/build/gen_headers/arch",
+                "${workspaceFolder}/build/gen_headers",
+                "${workspaceFolder}/build/libsel4/autoconf",
+                "${workspaceFolder}/build/libsel4/gen_config",
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/include/**",
+                "${workspaceFolder}/libsel4/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}

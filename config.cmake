@@ -590,9 +590,7 @@ config_option(
 config_option(
     KernelLinuxAppSupport LINUX_APP_SUPPORT
     "Allow Support Monolithic."
-    DEFAULT "${KernelDebugBuild}"
-    DEPENDS "NOT KernelVerificationBuild"
-    DEFAULT_DISABLED OFF
+    DEFAULT OFF
 )
 
 add_config_library(kernel "${configure_string}")
