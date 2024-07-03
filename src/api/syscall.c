@@ -81,11 +81,6 @@ exception_t handleUnknownSyscall(word_t w)
         kernel_putchar(getRegister(NODE_STATE(ksCurThread), capRegister));
         return EXCEPTION_NONE;
     }
-    // if (w == SysGetClock) {
-    //     uint64_t current = riscv_read_time();
-    //     setRegister(NODE_STATE(ksCurThread), capRegister, current);
-    //     return EXCEPTION_NONE;
-    // }
     if (w == SysDebugDumpScheduler)
     {
 #ifdef CONFIG_DEBUG_BUILD
@@ -236,6 +231,14 @@ exception_t handleUnknownSyscall(word_t w)
         break; /* syscall is not for benchmarking */
     }          /* end switch(w) */
 #endif         /* CONFIG_ENABLE_BENCHMARKS */
+
+#ifdef CONFIG_LINUX_APP_SUPPORT /* Support Linux App Configuration */
+    if (w == SysGetClock) {
+        uint64_t current = riscv_read_time();
+        setRegister(NODE_STATE(ksCurThread), capRegister, current);
+        return EXCEPTION_NONE;
+    }
+#endif
 
     MCS_DO_IF_BUDGET({
 #ifdef CONFIG_SET_TLS_BASE_SELF

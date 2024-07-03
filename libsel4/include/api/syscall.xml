@@ -41,7 +41,6 @@
             <condition><config var="CONFIG_PRINTING"/></condition>
             <syscall name="DebugPutChar"  />
             <syscall name="DebugDumpScheduler" />
-            <!-- <syscall name="GetClock"    /> -->
         </config>
         <config>
             <condition><config var="CONFIG_DEBUG_BUILD"/></condition>
@@ -102,6 +101,10 @@
         <config>
             <condition><config var="CONFIG_SET_TLS_BASE_SELF"/></condition>
             <syscall name="SetTLSBase"/>
+        </config>
+        <config>
+            <condition><config var="CONFIG_LINUX_APP_SUPPORT" /></condition>
+            <syscall name="GetClock" />
         </config>
     </debug>
 </syscalls>
