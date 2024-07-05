@@ -103,8 +103,13 @@
             <syscall name="SetTLSBase"/>
         </config>
         <config>
-            <condition><config var="CONFIG_LINUX_APP_SUPPORT" /></condition>
+            <condition><config var="CONFIG_GET_CLOCK"/></condition>
             <syscall name="GetClock" />
         </config>
+        <!-- This will generate the syscall. -->
+        <!-- <config>
+            <condition><config var="CONFIG_LINUX_APP_SUPPORT" /></condition>
+            <syscall name=""/>
+        </config> -->
     </debug>
 </syscalls>

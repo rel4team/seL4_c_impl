@@ -232,12 +232,16 @@ exception_t handleUnknownSyscall(word_t w)
     }          /* end switch(w) */
 #endif         /* CONFIG_ENABLE_BENCHMARKS */
 
-#ifdef CONFIG_LINUX_APP_SUPPORT /* Support Linux App Configuration */
+#ifdef CONFIG_GET_CLOCK   /* Support GetClock Syscall */
     if (w == SysGetClock) {
         uint64_t current = riscv_read_time();
         setRegister(NODE_STATE(ksCurThread), capRegister, current);
         return EXCEPTION_NONE;
     }
+#endif
+
+#ifdef CONFIG_LINUX_APP_SUPPORT /* Support Linux App Configuration */
+
 #endif
 
     MCS_DO_IF_BUDGET({

@@ -773,20 +773,6 @@ LIBSEL4_INLINE_FUNC seL4_MessageInfo_t seL4_NBWait(seL4_CPtr src, seL4_Word *sen
 #endif
 
 #ifdef CONFIG_PRINTING
-// LIBSEL4_INLINE_FUNC seL4_Uint64 seL4_GetClock()
-// {
-//     seL4_Word res = 0;
-//     seL4_Word unused1 = 0;
-//     seL4_Word unused2 = 0;
-//     seL4_Word unused3 = 0;
-//     seL4_Word unused4 = 0;
-//     seL4_Word unused5 = 0;
-
-//     riscv_sys_send_recv(seL4_SysGetClock, 0, &res, 0, &unused1, &unused2, &unused3,
-//                         &unused4, &unused5, 0);
-//     return res;
-// }
-
 LIBSEL4_INLINE_FUNC void seL4_DebugPutChar(char c)
 {
     seL4_Word unused0 = 0;
@@ -1001,3 +987,19 @@ LIBSEL4_INLINE_FUNC void seL4_SetTLSBase(seL4_Word tls_base)
     asm volatile("" ::: "memory");
 }
 #endif /* CONFIG_SET_TLS_BASE_SELF */
+
+#ifdef CONFIG_GET_CLOCK
+LIBSEL4_INLINE_FUNC seL4_Uint64 seL4_GetClock()
+{
+    seL4_Word res = 0;
+    seL4_Word unused1 = 0;
+    seL4_Word unused2 = 0;
+    seL4_Word unused3 = 0;
+    seL4_Word unused4 = 0;
+    seL4_Word unused5 = 0;
+
+    riscv_sys_send_recv(seL4_SysGetClock, 0, &res, 0, &unused1, &unused2, &unused3,
+                        &unused4, &unused5, 0);
+    return res;
+}
+#endif

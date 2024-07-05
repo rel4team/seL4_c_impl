@@ -585,6 +585,16 @@ config_option(
 )
 
 #----------------------------------------------------------------
+# Option for Get Clock Syscall
+#----------------------------------------------------------------
+config_option(
+    KernelGetClock GET_CLOCK
+    "Allow Support Monolithic."
+    DEFAULT ON
+    DEFAULT_DISABLED OFF
+)
+
+#----------------------------------------------------------------
 # Option for Linux App Support.
 #----------------------------------------------------------------
 config_option(
