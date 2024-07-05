@@ -234,8 +234,14 @@ exception_t handleUnknownSyscall(word_t w)
 
 #ifdef CONFIG_GET_CLOCK   /* Support GetClock Syscall */
     if (w == SysGetClock) {
+        #ifdef CONFIG_ARCH_RISCV
         uint64_t current = riscv_read_time();
         setRegister(NODE_STATE(ksCurThread), capRegister, current);
+        #endif
+
+        #ifdef CONFIG_ARCH_ARM
+        // TODO: Implement the GetClock for ARM
+        #endif
         return EXCEPTION_NONE;
     }
 #endif
