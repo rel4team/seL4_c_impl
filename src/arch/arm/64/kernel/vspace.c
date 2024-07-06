@@ -132,64 +132,64 @@ enum mair_s2_types {
  *  EL2 still uses the Stage-1 AP format.
  */
 
-// static word_t CONST APFromVMRights(vm_rights_t vm_rights)
-// {
-//     switch (vm_rights) {
-//     case VMKernelOnly:
-//         if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-//             return 0;
-//         } else {
-//             return 0;
-//         }
+static word_t CONST APFromVMRights(vm_rights_t vm_rights)
+{
+    switch (vm_rights) {
+    case VMKernelOnly:
+        if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+            return 0;
+        } else {
+            return 0;
+        }
 
-//     case VMReadWrite:
-//         if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-//             return 3;
-//         } else {
-//             return 1;
-//         }
+    case VMReadWrite:
+        if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+            return 3;
+        } else {
+            return 1;
+        }
 
-//     case VMKernelReadOnly:
-//         if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-//             /* no corresponding AP for S2AP, return None */
-//             return 0;
-//         } else {
-//             return 2;
-//         }
+    case VMKernelReadOnly:
+        if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+            /* no corresponding AP for S2AP, return None */
+            return 0;
+        } else {
+            return 2;
+        }
 
-//     case VMReadOnly:
-//         if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-//             return 1;
-//         } else {
-//             return 3;
-//         }
+    case VMReadOnly:
+        if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+            return 1;
+        } else {
+            return 3;
+        }
 
-//     default:
-//         fail("Invalid VM rights");
-//     }
-// }
+    default:
+        fail("Invalid VM rights");
+    }
+}
 
-// vm_rights_t CONST maskVMRights(vm_rights_t vm_rights, seL4_CapRights_t cap_rights_mask)
-// {
-//     if (vm_rights == VMReadOnly &&
-//         seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
-//         return VMReadOnly;
-//     }
-//     if (vm_rights == VMReadWrite &&
-//         seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
-//         if (!seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
-//             return VMReadOnly;
-//         } else {
-//             return VMReadWrite;
-//         }
-//     }
-//     if (vm_rights == VMReadWrite &&
-//         !seL4_CapRights_get_capAllowRead(cap_rights_mask) &&
-//         seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
-//         userError("Attempted to make unsupported write only mapping");
-//     }
-//     return VMKernelOnly;
-// }
+vm_rights_t CONST maskVMRights(vm_rights_t vm_rights, seL4_CapRights_t cap_rights_mask)
+{
+    if (vm_rights == VMReadOnly &&
+        seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
+        return VMReadOnly;
+    }
+    if (vm_rights == VMReadWrite &&
+        seL4_CapRights_get_capAllowRead(cap_rights_mask)) {
+        if (!seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
+            return VMReadOnly;
+        } else {
+            return VMReadWrite;
+        }
+    }
+    if (vm_rights == VMReadWrite &&
+        !seL4_CapRights_get_capAllowRead(cap_rights_mask) &&
+        seL4_CapRights_get_capAllowWrite(cap_rights_mask)) {
+        userError("Attempted to make unsupported write only mapping");
+    }
+    return VMKernelOnly;
+}
 
 // /* ==================== BOOT CODE STARTS HERE ==================== */
 
@@ -208,32 +208,32 @@ enum mair_s2_types {
 //  * VA range so that the 54th bit is XN. Setting the bit to 0 allows execution.
 //  *
 //  */
-// BOOT_CODE void map_kernel_frame(paddr_t paddr, pptr_t vaddr, vm_rights_t vm_rights, vm_attributes_t attributes)
-// {
-//     assert(vaddr >= PPTR_TOP);
+BOOT_CODE void map_kernel_frame(paddr_t paddr, pptr_t vaddr, vm_rights_t vm_rights, vm_attributes_t attributes)
+{
+    assert(vaddr >= PPTR_TOP);
 
-// #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-//     word_t uxn = vm_attributes_get_armExecuteNever(attributes);
-// #else
-//     word_t uxn = 1; /* unprivileged execute never */
-// #endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
-//     word_t attr_index;
-//     word_t shareable;
-//     if (vm_attributes_get_armPageCacheable(attributes)) {
-//         attr_index = NORMAL;
-//         shareable = SMP_TERNARY(SMP_SHARE, 0);
-//     } else {
-//         attr_index = DEVICE_nGnRnE;
-//         shareable = 0;
-//     }
-//     armKSGlobalKernelPT[GET_PT_INDEX(vaddr)] = pte_new(uxn, paddr,
-//                                                        0, /* global */
-//                                                        1, /* access flag */
-//                                                        shareable,
-//                                                        APFromVMRights(vm_rights),
-//                                                        attr_index,
-//                                                        RESERVED);
-// }
+#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+    word_t uxn = vm_attributes_get_armExecuteNever(attributes);
+#else
+    word_t uxn = 1; /* unprivileged execute never */
+#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+    word_t attr_index;
+    word_t shareable;
+    if (vm_attributes_get_armPageCacheable(attributes)) {
+        attr_index = NORMAL;
+        shareable = SMP_TERNARY(SMP_SHARE, 0);
+    } else {
+        attr_index = DEVICE_nGnRnE;
+        shareable = 0;
+    }
+    armKSGlobalKernelPT[GET_PT_INDEX(vaddr)] = pte_new(uxn, paddr,
+                                                       0, /* global */
+                                                       1, /* access flag */
+                                                       shareable,
+                                                       APFromVMRights(vm_rights),
+                                                       attr_index,
+                                                       RESERVED);
+}
 
 // BOOT_CODE void map_kernel_window(void)
 // {
@@ -347,24 +347,24 @@ enum mair_s2_types {
 //                                  );
 // }
 
-// static BOOT_CODE cap_t create_it_frame_cap(pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large)
-// {
-//     vm_page_size_t frame_size;
-//     if (use_large) {
-//         frame_size = ARMLargePage;
-//     } else {
-//         frame_size = ARMSmallPage;
-//     }
-//     return
-//         cap_frame_cap_new(
-//             asid,                          /* capFMappedASID */
-//             pptr,                          /* capFBasePtr */
-//             frame_size,                    /* capFSize */
-//             vptr,                          /* capFMappedAddress */
-//             wordFromVMRights(VMReadWrite), /* capFVMRights */
-//             false                          /* capFIsDevice */
-//         );
-// }
+static BOOT_CODE cap_t create_it_frame_cap(pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large)
+{
+    vm_page_size_t frame_size;
+    if (use_large) {
+        frame_size = ARMLargePage;
+    } else {
+        frame_size = ARMSmallPage;
+    }
+    return
+        cap_frame_cap_new(
+            asid,                          /* capFMappedASID */
+            pptr,                          /* capFBasePtr */
+            frame_size,                    /* capFSize */
+            vptr,                          /* capFMappedAddress */
+            wordFromVMRights(VMReadWrite), /* capFVMRights */
+            false                          /* capFIsDevice */
+        );
+}
 
 // static BOOT_CODE void map_it_pt_cap(cap_t vspace_cap, cap_t pt_cap)
 // {
@@ -464,15 +464,15 @@ enum mair_s2_types {
 //     return cap;
 // }
 // #endif /* AARCH64_VSPACE_S2_START_L1 */
-// BOOT_CODE word_t arch_get_n_paging(v_region_t it_v_reg)
-// {
-//     return
-// #ifndef AARCH64_VSPACE_S2_START_L1
-//         get_n_paging(it_v_reg, PGD_INDEX_OFFSET) +
-// #endif
-//         get_n_paging(it_v_reg, PUD_INDEX_OFFSET) +
-//         get_n_paging(it_v_reg, PD_INDEX_OFFSET);
-// }
+BOOT_CODE word_t arch_get_n_paging(v_region_t it_v_reg)
+{
+    return
+#ifndef AARCH64_VSPACE_S2_START_L1
+        get_n_paging(it_v_reg, PGD_INDEX_OFFSET) +
+#endif
+        get_n_paging(it_v_reg, PUD_INDEX_OFFSET) +
+        get_n_paging(it_v_reg, PD_INDEX_OFFSET);
+}
 
 // BOOT_CODE cap_t create_it_address_space(cap_t root_cnode_cap, v_region_t it_v_reg)
 // {
@@ -525,18 +525,18 @@ enum mair_s2_types {
 //     return vspace_cap;
 // }
 
-// BOOT_CODE cap_t create_unmapped_it_frame_cap(pptr_t pptr, bool_t use_large)
-// {
-//     return create_it_frame_cap(pptr, 0, asidInvalid, use_large);
-// }
+BOOT_CODE cap_t create_unmapped_it_frame_cap(pptr_t pptr, bool_t use_large)
+{
+    return create_it_frame_cap(pptr, 0, asidInvalid, use_large);
+}
 
-// BOOT_CODE cap_t create_mapped_it_frame_cap(cap_t pd_cap, pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large,
-//                                            bool_t executable)
-// {
-//     cap_t cap = create_it_frame_cap(pptr, vptr, asid, use_large);
-//     map_it_frame_cap(pd_cap, cap, executable);
-//     return cap;
-// }
+BOOT_CODE cap_t create_mapped_it_frame_cap(cap_t pd_cap, pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large,
+                                           bool_t executable)
+{
+    cap_t cap = create_it_frame_cap(pptr, vptr, asid, use_large);
+    map_it_frame_cap(pd_cap, cap, executable);
+    return cap;
+}
 
 // BOOT_CODE void activate_kernel_vspace(void)
 // {
@@ -980,10 +980,10 @@ exception_t checkValidIPCBuffer(vptr_t vptr, cap_t cap)
 //     }
 // }
 
-// bool_t CONST isVTableRoot(cap_t cap)
-// {
-//     return cap_get_capType(cap) == cap_vtable_root_cap;
-// }
+bool_t CONST isVTableRoot(cap_t cap)
+{
+    return cap_get_capType(cap) == cap_vtable_root_cap;
+}
 
 // bool_t CONST isValidNativeRoot(cap_t cap)
 // {
@@ -1037,47 +1037,47 @@ exception_t checkValidIPCBuffer(vptr_t vptr, cap_t cap)
 //     return true;
 // }
 
-// pgde_t *pageUpperDirectoryMapped(asid_t asid, vptr_t vaddr, pude_t *pud)
-// {
-//     findVSpaceForASID_ret_t find_ret;
-//     lookupPGDSlot_ret_t lu_ret;
+pgde_t *pageUpperDirectoryMapped(asid_t asid, vptr_t vaddr, pude_t *pud)
+{
+    findVSpaceForASID_ret_t find_ret;
+    lookupPGDSlot_ret_t lu_ret;
 
-//     find_ret = findVSpaceForASID(asid);
-//     if (find_ret.status != EXCEPTION_NONE) {
-//         return NULL;
-//     }
+    find_ret = findVSpaceForASID(asid);
+    if (find_ret.status != EXCEPTION_NONE) {
+        return NULL;
+    }
 
-//     lu_ret = lookupPGDSlot(find_ret.vspace_root, vaddr);
-//     if (pgde_pgde_pud_ptr_get_present(lu_ret.pgdSlot) &&
-//         (pgde_pgde_pud_ptr_get_pud_base_address(lu_ret.pgdSlot) == pptr_to_paddr(pud))) {
-//         return lu_ret.pgdSlot;
-//     }
+    lu_ret = lookupPGDSlot(find_ret.vspace_root, vaddr);
+    if (pgde_pgde_pud_ptr_get_present(lu_ret.pgdSlot) &&
+        (pgde_pgde_pud_ptr_get_pud_base_address(lu_ret.pgdSlot) == pptr_to_paddr(pud))) {
+        return lu_ret.pgdSlot;
+    }
 
-//     return NULL;
-// }
+    return NULL;
+}
 
-// pude_t *pageDirectoryMapped(asid_t asid, vptr_t vaddr, pde_t *pd)
-// {
-//     findVSpaceForASID_ret_t find_ret;
-//     lookupPUDSlot_ret_t lu_ret;
+pude_t *pageDirectoryMapped(asid_t asid, vptr_t vaddr, pde_t *pd)
+{
+    findVSpaceForASID_ret_t find_ret;
+    lookupPUDSlot_ret_t lu_ret;
 
-//     find_ret = findVSpaceForASID(asid);
-//     if (find_ret.status != EXCEPTION_NONE) {
-//         return NULL;
-//     }
+    find_ret = findVSpaceForASID(asid);
+    if (find_ret.status != EXCEPTION_NONE) {
+        return NULL;
+    }
 
-//     lu_ret = lookupPUDSlot(find_ret.vspace_root, vaddr);
-//     if (lu_ret.status != EXCEPTION_NONE) {
-//         return NULL;
-//     }
+    lu_ret = lookupPUDSlot(find_ret.vspace_root, vaddr);
+    if (lu_ret.status != EXCEPTION_NONE) {
+        return NULL;
+    }
 
-//     if (pude_pude_pd_ptr_get_present(lu_ret.pudSlot) &&
-//         (pude_pude_pd_ptr_get_pd_base_address(lu_ret.pudSlot) == pptr_to_paddr(pd))) {
-//         return lu_ret.pudSlot;
-//     }
+    if (pude_pude_pd_ptr_get_present(lu_ret.pudSlot) &&
+        (pude_pude_pd_ptr_get_pd_base_address(lu_ret.pudSlot) == pptr_to_paddr(pd))) {
+        return lu_ret.pudSlot;
+    }
 
-//     return NULL;
-// }
+    return NULL;
+}
 
 // #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
 
@@ -1216,26 +1216,26 @@ exception_t checkValidIPCBuffer(vptr_t vptr, cap_t cap)
 // }
 // #endif
 
-// static inline void invalidateTLBByASID(asid_t asid)
-// {
-// #ifdef CONFIG_ARM_SMMU
-//     word_t bind_cb = getASIDBindCB(asid);
-//     if (unlikely(bind_cb)) {
-//         invalidateSMMUTLBByASID(asid, bind_cb);
-//     }
-// #endif
-// #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-//     asid_map_t asid_map;
+static inline void invalidateTLBByASID(asid_t asid)
+{
+#ifdef CONFIG_ARM_SMMU
+    word_t bind_cb = getASIDBindCB(asid);
+    if (unlikely(bind_cb)) {
+        invalidateSMMUTLBByASID(asid, bind_cb);
+    }
+#endif
+#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+    asid_map_t asid_map;
 
-//     asid_map = findMapForASID(asid);
-//     if (!asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map)) {
-//         return;
-//     }
-//     invalidateTranslationASID(asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map));
-// #else
-//     invalidateTranslationASID(asid);
-// #endif
-// }
+    asid_map = findMapForASID(asid);
+    if (!asid_map_asid_map_vspace_get_stored_vmid_valid(asid_map)) {
+        return;
+    }
+    invalidateTranslationASID(asid_map_asid_map_vspace_get_stored_hw_vmid(asid_map));
+#else
+    invalidateTranslationASID(asid);
+#endif
+}
 
 // static inline void invalidateTLBByASIDVA(asid_t asid, vptr_t vaddr)
 // {
@@ -1259,66 +1259,66 @@ exception_t checkValidIPCBuffer(vptr_t vptr, cap_t cap)
 // #endif
 // }
 
-// pde_t *pageTableMapped(asid_t asid, vptr_t vaddr, pte_t *pt)
-// {
-//     findVSpaceForASID_ret_t find_ret;
-//     lookupPDSlot_ret_t lu_ret;
+pde_t *pageTableMapped(asid_t asid, vptr_t vaddr, pte_t *pt)
+{
+    findVSpaceForASID_ret_t find_ret;
+    lookupPDSlot_ret_t lu_ret;
 
-//     find_ret = findVSpaceForASID(asid);
-//     if (find_ret.status != EXCEPTION_NONE) {
-//         return NULL;
-//     }
+    find_ret = findVSpaceForASID(asid);
+    if (find_ret.status != EXCEPTION_NONE) {
+        return NULL;
+    }
 
-//     lu_ret = lookupPDSlot(find_ret.vspace_root, vaddr);
-//     if (lu_ret.status != EXCEPTION_NONE) {
-//         return NULL;
-//     }
+    lu_ret = lookupPDSlot(find_ret.vspace_root, vaddr);
+    if (lu_ret.status != EXCEPTION_NONE) {
+        return NULL;
+    }
 
-//     if (pde_pde_small_ptr_get_present(lu_ret.pdSlot) &&
-//         (pde_pde_small_ptr_get_pt_base_address(lu_ret.pdSlot) == pptr_to_paddr(pt))) {
-//         return lu_ret.pdSlot;
-//     }
+    if (pde_pde_small_ptr_get_present(lu_ret.pdSlot) &&
+        (pde_pde_small_ptr_get_pt_base_address(lu_ret.pdSlot) == pptr_to_paddr(pt))) {
+        return lu_ret.pdSlot;
+    }
 
-//     return NULL;
-// }
+    return NULL;
+}
 
-// void unmapPageUpperDirectory(asid_t asid, vptr_t vaddr, pude_t *pud)
-// {
-//     pgde_t *pgdSlot;
+void unmapPageUpperDirectory(asid_t asid, vptr_t vaddr, pude_t *pud)
+{
+    pgde_t *pgdSlot;
 
-//     pgdSlot = pageUpperDirectoryMapped(asid, vaddr, pud);
-//     if (likely(pgdSlot != NULL)) {
-//         *pgdSlot = pgde_pgde_invalid_new();
-//         cleanByVA_PoU((vptr_t)pgdSlot, pptr_to_paddr(pgdSlot));
-//         invalidateTLBByASID(asid);
-//     }
-// }
+    pgdSlot = pageUpperDirectoryMapped(asid, vaddr, pud);
+    if (likely(pgdSlot != NULL)) {
+        *pgdSlot = pgde_pgde_invalid_new();
+        cleanByVA_PoU((vptr_t)pgdSlot, pptr_to_paddr(pgdSlot));
+        invalidateTLBByASID(asid);
+    }
+}
 
-// void unmapPageDirectory(asid_t asid, vptr_t vaddr, pde_t *pd)
-// {
-//     pude_t *pudSlot;
+void unmapPageDirectory(asid_t asid, vptr_t vaddr, pde_t *pd)
+{
+    pude_t *pudSlot;
 
-//     pudSlot = pageDirectoryMapped(asid, vaddr, pd);
-//     if (likely(pudSlot != NULL)) {
-//         *pudSlot = pude_invalid_new();
+    pudSlot = pageDirectoryMapped(asid, vaddr, pd);
+    if (likely(pudSlot != NULL)) {
+        *pudSlot = pude_invalid_new();
 
-//         cleanByVA_PoU((vptr_t)pudSlot, pptr_to_paddr(pudSlot));
-//         invalidateTLBByASID(asid);
-//     }
-// }
+        cleanByVA_PoU((vptr_t)pudSlot, pptr_to_paddr(pudSlot));
+        invalidateTLBByASID(asid);
+    }
+}
 
-// void unmapPageTable(asid_t asid, vptr_t vaddr, pte_t *pt)
-// {
-//     pde_t *pdSlot;
+void unmapPageTable(asid_t asid, vptr_t vaddr, pte_t *pt)
+{
+    pde_t *pdSlot;
 
-//     pdSlot = pageTableMapped(asid, vaddr, pt);
-//     if (likely(pdSlot != NULL)) {
-//         *pdSlot = pde_invalid_new();
+    pdSlot = pageTableMapped(asid, vaddr, pt);
+    if (likely(pdSlot != NULL)) {
+        *pdSlot = pde_invalid_new();
 
-//         cleanByVA_PoU((vptr_t)pdSlot, pptr_to_paddr(pdSlot));
-//         invalidateTLBByASID(asid);
-//     }
-// }
+        cleanByVA_PoU((vptr_t)pdSlot, pptr_to_paddr(pdSlot));
+        invalidateTLBByASID(asid);
+    }
+}
 
 // void unmapPage(vm_page_size_t page_size, asid_t asid, vptr_t vptr, pptr_t pptr)
 // {
@@ -2430,27 +2430,27 @@ exception_t checkValidIPCBuffer(vptr_t vptr, cap_t cap)
 //     }
 // }
 
-// #ifdef CONFIG_DEBUG_BUILD
-// void kernelPrefetchAbort(word_t pc) VISIBLE;
-// void kernelDataAbort(word_t pc) VISIBLE;
+#ifdef CONFIG_DEBUG_BUILD
+void kernelPrefetchAbort(word_t pc) VISIBLE;
+void kernelDataAbort(word_t pc) VISIBLE;
 
-// void kernelPrefetchAbort(word_t pc)
-// {
-//     printf("\n\nKERNEL PREFETCH ABORT!\n");
-//     printf("Faulting instruction: 0x%"SEL4_PRIx_word"\n", pc);
-//     printf("ESR (IFSR): 0x%"SEL4_PRIx_word"\n", getIFSR());
-//     halt();
-// }
+void kernelPrefetchAbort(word_t pc)
+{
+    printf("\n\nKERNEL PREFETCH ABORT!\n");
+    printf("Faulting instruction: 0x%"SEL4_PRIx_word"\n", pc);
+    printf("ESR (IFSR): 0x%"SEL4_PRIx_word"\n", getIFSR());
+    halt();
+}
 
-// void kernelDataAbort(word_t pc)
-// {
-//     printf("\n\nKERNEL DATA ABORT!\n");
-//     printf("Faulting instruction: 0x%"SEL4_PRIx_word"\n", pc);
-//     printf("FAR: 0x%"SEL4_PRIx_word" ESR (DFSR): 0x%"SEL4_PRIx_word"\n",
-//            getFAR(), getDFSR());
-//     halt();
-// }
-// #endif /* CONFIG_DEBUG_BUILD */
+void kernelDataAbort(word_t pc)
+{
+    printf("\n\nKERNEL DATA ABORT!\n");
+    printf("Faulting instruction: 0x%"SEL4_PRIx_word"\n", pc);
+    printf("FAR: 0x%"SEL4_PRIx_word" ESR (DFSR): 0x%"SEL4_PRIx_word"\n",
+           getFAR(), getDFSR());
+    halt();
+}
+#endif /* CONFIG_DEBUG_BUILD */
 
 // #ifdef CONFIG_PRINTING
 // typedef struct readWordFromVSpace_ret {

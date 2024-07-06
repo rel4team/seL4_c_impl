@@ -86,6 +86,7 @@ struct findVSpaceForASID_ret {
 };
 typedef struct findVSpaceForASID_ret findVSpaceForASID_ret_t;
 
+void map_it_frame_cap(cap_t vspace_cap, cap_t frame_cap, bool_t executable);
 lookupPUDSlot_ret_t lookupPUDSlot(vspace_root_t *vspace, vptr_t vptr);
 lookupPGDSlot_ret_t lookupPGDSlot(vspace_root_t *vspace, vptr_t vptr);
 findVSpaceForASID_ret_t findVSpaceForASID(asid_t asid);

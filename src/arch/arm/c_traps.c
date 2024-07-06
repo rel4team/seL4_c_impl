@@ -101,56 +101,56 @@ void VISIBLE NORETURN c_handle_instruction_fault(void)
     c_handle_vm_fault(seL4_InstructionFault);
 }
 
-void VISIBLE NORETURN c_handle_interrupt(void)
-{
-    NODE_LOCK_IRQ_IF(IRQT_TO_IRQ(getActiveIRQ()) != irq_remote_call_ipi);
-    c_entry_hook();
+// void VISIBLE NORETURN c_handle_interrupt(void)
+// {
+//     NODE_LOCK_IRQ_IF(IRQT_TO_IRQ(getActiveIRQ()) != irq_remote_call_ipi);
+//     c_entry_hook();
 
-#ifdef TRACK_KERNEL_ENTRIES
-    ksKernelEntry.path = Entry_Interrupt;
-    ksKernelEntry.word = IRQT_TO_IRQ(getActiveIRQ());
-    ksKernelEntry.core = CURRENT_CPU_INDEX();
-#endif
+// #ifdef TRACK_KERNEL_ENTRIES
+//     ksKernelEntry.path = Entry_Interrupt;
+//     ksKernelEntry.word = IRQT_TO_IRQ(getActiveIRQ());
+//     ksKernelEntry.core = CURRENT_CPU_INDEX();
+// #endif
 
-    handleInterruptEntry();
-    restore_user_context();
-}
+//     handleInterruptEntry();
+//     restore_user_context();
+// }
 
-void NORETURN slowpath(syscall_t syscall)
-{
-    if (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
-#ifdef TRACK_KERNEL_ENTRIES
-        ksKernelEntry.path = Entry_UnknownSyscall;
-        /* ksKernelEntry.word word is already set to syscall */
-#endif /* TRACK_KERNEL_ENTRIES */
-        /* Contrary to the name, this handles all non-standard syscalls used in
-         * debug builds also.
-         */
-        handleUnknownSyscall(syscall);
-    } else {
-#ifdef TRACK_KERNEL_ENTRIES
-        ksKernelEntry.is_fastpath = 0;
-#endif /* TRACK KERNEL ENTRIES */
-        handleSyscall(syscall);
-    }
+// void NORETURN slowpath(syscall_t syscall)
+// {
+//     if (unlikely(syscall < SYSCALL_MIN || syscall > SYSCALL_MAX)) {
+// #ifdef TRACK_KERNEL_ENTRIES
+//         ksKernelEntry.path = Entry_UnknownSyscall;
+//         /* ksKernelEntry.word word is already set to syscall */
+// #endif /* TRACK_KERNEL_ENTRIES */
+//         /* Contrary to the name, this handles all non-standard syscalls used in
+//          * debug builds also.
+//          */
+//         handleUnknownSyscall(syscall);
+//     } else {
+// #ifdef TRACK_KERNEL_ENTRIES
+//         ksKernelEntry.is_fastpath = 0;
+// #endif /* TRACK KERNEL ENTRIES */
+//         handleSyscall(syscall);
+//     }
 
-    restore_user_context();
-    UNREACHABLE();
-}
+//     restore_user_context();
+//     UNREACHABLE();
+// }
 
-void VISIBLE c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall)
-{
-    NODE_LOCK_SYS;
+// void VISIBLE c_handle_syscall(word_t cptr, word_t msgInfo, syscall_t syscall)
+// {
+//     NODE_LOCK_SYS;
 
-    c_entry_hook();
-#ifdef TRACK_KERNEL_ENTRIES
-    benchmark_debug_syscall_start(cptr, msgInfo, syscall);
-    ksKernelEntry.is_fastpath = 0;
-#endif /* DEBUG */
+//     c_entry_hook();
+// #ifdef TRACK_KERNEL_ENTRIES
+//     benchmark_debug_syscall_start(cptr, msgInfo, syscall);
+//     ksKernelEntry.is_fastpath = 0;
+// #endif /* DEBUG */
 
-    slowpath(syscall);
-    UNREACHABLE();
-}
+//     slowpath(syscall);
+//     UNREACHABLE();
+// }
 
 #ifdef CONFIG_FASTPATH
 ALIGN(L1_CACHE_LINE_SIZE)

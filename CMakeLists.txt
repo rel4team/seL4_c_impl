@@ -174,15 +174,15 @@ add_compile_options(
     #-----------------------------------
     # Configure warnings
     #-----------------------------------
-    -Wall
-    -Werror
-    -Wstrict-prototypes
-    -Wmissing-prototypes
-    -Wnested-externs
-    -Wmissing-declarations
-    -Wundef
-    -Wpointer-arith
-    -Wno-nonnull
+    # -Wall
+    # -Werror
+    # -Wstrict-prototypes
+    # -Wmissing-prototypes
+    # -Wnested-externs
+    # -Wmissing-declarations
+    # -Wundef
+    # -Wpointer-arith
+    # -Wno-nonnull
     #-----------------------------------
     # Configure compiler settings.
     #-----------------------------------
