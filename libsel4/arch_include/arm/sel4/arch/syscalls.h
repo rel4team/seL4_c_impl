@@ -803,3 +803,21 @@ LIBSEL4_INLINE_FUNC seL4_MessageInfo_t seL4_Poll(seL4_CPtr src, seL4_Word *sende
     return seL4_NBRecv(src, sender);
 #endif
 }
+
+//----------------------------------------------------------------
+// This is used for rel4 and its related tests.
+//----------------------------------------------------------------
+#ifdef CONFIG_GET_CLOCK
+LIBSEL4_INLINE_FUNC seL4_Uint64 seL4_GetClock()
+{
+    seL4_Word res = 0;
+    seL4_Word unused1 = 0;
+    seL4_Word unused2 = 0;
+    seL4_Word unused3 = 0;
+    seL4_Word unused4 = 0;
+    seL4_Word unused5 = 0;
+    arm_sys_send_recv(seL4_SysGetClock, 0, &res, 0, &unused1, &unused2, &unused3, &unused4,
+                      &unused5, 0);
+    return res;
+}
+#endif

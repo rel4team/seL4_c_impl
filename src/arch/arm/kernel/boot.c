@@ -641,6 +641,9 @@ BOOT_CODE VISIBLE void init_kernel(
 )
 {
     bool_t result;
+    // FIXME: Don't use printf in the here
+    // Just for testing, remove it when fix pl011 PPTR address
+    printf("REL4_kernel BOOT CODE");
 
 #ifdef ENABLE_SMP_SUPPORT
     /* we assume there exists a cpu with id 0 and will use it for bootstrapping */
