@@ -235,67 +235,67 @@ BOOT_CODE void map_kernel_frame(paddr_t paddr, pptr_t vaddr, vm_rights_t vm_righ
                                                        RESERVED);
 }
 
-// BOOT_CODE void map_kernel_window(void)
-// {
+BOOT_CODE void map_kernel_window(void)
+{
 
-//     paddr_t paddr;
-//     pptr_t vaddr;
-//     word_t idx;
+    paddr_t paddr;
+    pptr_t vaddr;
+    word_t idx;
 
-// #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-//     /* verify that the kernel window as at the second entry of the PGD */
-//     assert(GET_PGD_INDEX(PPTR_BASE) == 1);
-// #else
-//     /* verify that the kernel window as at the last entry of the PGD */
-//     assert(GET_PGD_INDEX(PPTR_BASE) == BIT(PGD_INDEX_BITS) - 1);
-// #endif
-//     assert(IS_ALIGNED(PPTR_BASE, seL4_LargePageBits));
-//     /* verify that the kernel device window is 1gb aligned and 1gb in size */
-//     assert(GET_PUD_INDEX(PPTR_TOP) == BIT(PUD_INDEX_BITS) - 1);
-//     assert(IS_ALIGNED(PPTR_TOP, seL4_HugePageBits));
+#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+    /* verify that the kernel window as at the second entry of the PGD */
+    assert(GET_PGD_INDEX(PPTR_BASE) == 1);
+#else
+    /* verify that the kernel window as at the last entry of the PGD */
+    assert(GET_PGD_INDEX(PPTR_BASE) == BIT(PGD_INDEX_BITS) - 1);
+#endif
+    assert(IS_ALIGNED(PPTR_BASE, seL4_LargePageBits));
+    /* verify that the kernel device window is 1gb aligned and 1gb in size */
+    assert(GET_PUD_INDEX(PPTR_TOP) == BIT(PUD_INDEX_BITS) - 1);
+    assert(IS_ALIGNED(PPTR_TOP, seL4_HugePageBits));
 
-//     /* place the PUD into the PGD */
-//     armKSGlobalKernelPGD[GET_PGD_INDEX(PPTR_BASE)] = pgde_pgde_pud_new(
-//                                                          addrFromKPPtr(armKSGlobalKernelPUD));
+    /* place the PUD into the PGD */
+    armKSGlobalKernelPGD[GET_PGD_INDEX(PPTR_BASE)] = pgde_pgde_pud_new(
+                                                         addrFromKPPtr(armKSGlobalKernelPUD));
 
-//     /* place all PDs except the last one in PUD */
-//     for (idx = GET_PUD_INDEX(PPTR_BASE); idx < GET_PUD_INDEX(PPTR_TOP); idx++) {
-//         armKSGlobalKernelPUD[idx] = pude_pude_pd_new(
-//                                         addrFromKPPtr(&armKSGlobalKernelPDs[idx][0])
-//                                     );
-//     }
+    /* place all PDs except the last one in PUD */
+    for (idx = GET_PUD_INDEX(PPTR_BASE); idx < GET_PUD_INDEX(PPTR_TOP); idx++) {
+        armKSGlobalKernelPUD[idx] = pude_pude_pd_new(
+                                        addrFromKPPtr(&armKSGlobalKernelPDs[idx][0])
+                                    );
+    }
 
-//     /* map the kernel window using large pages */
-//     vaddr = PPTR_BASE;
-//     for (paddr = PADDR_BASE; paddr < PADDR_TOP; paddr += BIT(seL4_LargePageBits)) {
-//         armKSGlobalKernelPDs[GET_PUD_INDEX(vaddr)][GET_PD_INDEX(vaddr)] = pde_pde_large_new(
-// #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-//                                                                               0, // XN
-// #else
-//                                                                               1, // UXN
-// #endif
-//                                                                               paddr,
-//                                                                               0,                        /* global */
-//                                                                               1,                        /* access flag */
-//                                                                               SMP_TERNARY(SMP_SHARE, 0),        /* Inner-shareable if SMP enabled, otherwise unshared */
-//                                                                               0,                        /* VMKernelOnly */
-//                                                                               NORMAL
-//                                                                           );
-//         vaddr += BIT(seL4_LargePageBits);
-//     }
+    /* map the kernel window using large pages */
+    vaddr = PPTR_BASE;
+    for (paddr = PADDR_BASE; paddr < PADDR_TOP; paddr += BIT(seL4_LargePageBits)) {
+        armKSGlobalKernelPDs[GET_PUD_INDEX(vaddr)][GET_PD_INDEX(vaddr)] = pde_pde_large_new(
+#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+                                                                              0, // XN
+#else
+                                                                              1, // UXN
+#endif
+                                                                              paddr,
+                                                                              0,                        /* global */
+                                                                              1,                        /* access flag */
+                                                                              SMP_TERNARY(SMP_SHARE, 0),        /* Inner-shareable if SMP enabled, otherwise unshared */
+                                                                              0,                        /* VMKernelOnly */
+                                                                              NORMAL
+                                                                          );
+        vaddr += BIT(seL4_LargePageBits);
+    }
 
-//     /* put the PD into the PUD for device window */
-//     armKSGlobalKernelPUD[GET_PUD_INDEX(PPTR_TOP)] = pude_pude_pd_new(
-//                                                         addrFromKPPtr(&armKSGlobalKernelPDs[BIT(PUD_INDEX_BITS) - 1][0])
-//                                                     );
+    /* put the PD into the PUD for device window */
+    armKSGlobalKernelPUD[GET_PUD_INDEX(PPTR_TOP)] = pude_pude_pd_new(
+                                                        addrFromKPPtr(&armKSGlobalKernelPDs[BIT(PUD_INDEX_BITS) - 1][0])
+                                                    );
 
-//     /* put the PT into the PD for device window */
-//     armKSGlobalKernelPDs[BIT(PUD_INDEX_BITS) - 1][BIT(PD_INDEX_BITS) - 1] = pde_pde_small_new(
-//                                                                                 addrFromKPPtr(armKSGlobalKernelPT)
-//                                                                             );
+    /* put the PT into the PD for device window */
+    armKSGlobalKernelPDs[BIT(PUD_INDEX_BITS) - 1][BIT(PD_INDEX_BITS) - 1] = pde_pde_small_new(
+                                                                                addrFromKPPtr(armKSGlobalKernelPT)
+                                                                            );
 
-//     map_kernel_devices();
-// }
+    map_kernel_devices();
+}
 
 // /* When the hypervisor support is enabled, the stage-2 translation table format
 //  * is used for applications.
@@ -538,17 +538,17 @@ BOOT_CODE cap_t create_mapped_it_frame_cap(cap_t pd_cap, pptr_t pptr, vptr_t vpt
     return cap;
 }
 
-// BOOT_CODE void activate_kernel_vspace(void)
-// {
-//     cleanInvalidateL1Caches();
-//     setCurrentKernelVSpaceRoot(ttbr_new(0, addrFromKPPtr(armKSGlobalKernelPGD)));
+BOOT_CODE void activate_kernel_vspace(void)
+{
+    cleanInvalidateL1Caches();
+    setCurrentKernelVSpaceRoot(ttbr_new(0, addrFromKPPtr(armKSGlobalKernelPGD)));
 
-//     /* Prevent elf-loader address translation to fill up TLB */
-//     setCurrentUserVSpaceRoot(ttbr_new(0, addrFromKPPtr(armKSGlobalUserVSpace)));
+    /* Prevent elf-loader address translation to fill up TLB */
+    setCurrentUserVSpaceRoot(ttbr_new(0, addrFromKPPtr(armKSGlobalUserVSpace)));
 
-//     invalidateLocalTLB();
-//     lockTLBEntry(KERNEL_ELF_BASE);
-// }
+    invalidateLocalTLB();
+    lockTLBEntry(KERNEL_ELF_BASE);
+}
 
 // BOOT_CODE void write_it_asid_pool(cap_t it_ap_cap, cap_t it_vspace_cap)
 // {

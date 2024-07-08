@@ -16,9 +16,7 @@
 #define PL011_UARTFR_TXFF         BIT(5)
 #define PL011_UARTFR_RXFE         BIT(4)
 
-// #define UART_REG(x) ((volatile uint32_t *)(PPTR_BASE + 0x9000000 + (x)))
-// FIXME: This used for boot stage, fix it to use `PPTR_BASE` instead.
-#define UART_REG(x) ((volatile uint32_t *)(0x9000000 + (x)))
+#define UART_REG(x) ((volatile uint32_t *)(UART_PPTR + (x)))
 
 #ifdef CONFIG_PRINTING
 void uart_drv_putchar(unsigned char c)

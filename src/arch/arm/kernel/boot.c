@@ -167,7 +167,7 @@ BOOT_CODE static void init_smmu(cap_t root_cnode_cap)
  * It does NOT initialise any kernel state.
  * @return For the verification build, this currently returns true always.
  */
-BOOT_CODE static bool_t init_cpu(void)
+BOOT_CODE bool_t init_cpu(void)
 {
     bool_t haveHWFPU;
 
@@ -643,7 +643,6 @@ BOOT_CODE VISIBLE void init_kernel(
     bool_t result;
     // FIXME: Don't use printf in the here
     // Just for testing, remove it when fix pl011 PPTR address
-    printf("REL4_kernel BOOT CODE");
 
 #ifdef ENABLE_SMP_SUPPORT
     /* we assume there exists a cpu with id 0 and will use it for bootstrapping */
@@ -665,6 +664,7 @@ BOOT_CODE VISIBLE void init_kernel(
                              dtb_addr_p, dtb_size);
 
 #endif /* ENABLE_SMP_SUPPORT */
+    printf("REL4_kernel BOOT CODE");
 
     if (!result) {
         fail("ERROR: kernel init failed");
