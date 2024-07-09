@@ -525,10 +525,10 @@ BOOT_CODE word_t arch_get_n_paging(v_region_t it_v_reg)
 //     return vspace_cap;
 // }
 
-BOOT_CODE cap_t create_unmapped_it_frame_cap(pptr_t pptr, bool_t use_large)
-{
-    return create_it_frame_cap(pptr, 0, asidInvalid, use_large);
-}
+// BOOT_CODE cap_t create_unmapped_it_frame_cap(pptr_t pptr, bool_t use_large)
+// {
+//     return create_it_frame_cap(pptr, 0, asidInvalid, use_large);
+// }
 
 BOOT_CODE cap_t create_mapped_it_frame_cap(cap_t pd_cap, pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large,
                                            bool_t executable)
@@ -538,17 +538,17 @@ BOOT_CODE cap_t create_mapped_it_frame_cap(cap_t pd_cap, pptr_t pptr, vptr_t vpt
     return cap;
 }
 
-BOOT_CODE void activate_kernel_vspace(void)
-{
-    cleanInvalidateL1Caches();
-    setCurrentKernelVSpaceRoot(ttbr_new(0, addrFromKPPtr(armKSGlobalKernelPGD)));
+// BOOT_CODE void activate_kernel_vspace(void)
+// {
+//     cleanInvalidateL1Caches();
+//     setCurrentKernelVSpaceRoot(ttbr_new(0, addrFromKPPtr(armKSGlobalKernelPGD)));
 
-    /* Prevent elf-loader address translation to fill up TLB */
-    setCurrentUserVSpaceRoot(ttbr_new(0, addrFromKPPtr(armKSGlobalUserVSpace)));
+//     /* Prevent elf-loader address translation to fill up TLB */
+//     setCurrentUserVSpaceRoot(ttbr_new(0, addrFromKPPtr(armKSGlobalUserVSpace)));
 
-    invalidateLocalTLB();
-    lockTLBEntry(KERNEL_ELF_BASE);
-}
+//     invalidateLocalTLB();
+//     lockTLBEntry(KERNEL_ELF_BASE);
+// }
 
 // BOOT_CODE void write_it_asid_pool(cap_t it_ap_cap, cap_t it_vspace_cap)
 // {
