@@ -28,32 +28,32 @@ BOOT_BSS static volatile word_t node_boot_lock;
 extern irq_t active_irq[CONFIG_MAX_NUM_NODES];
 BOOT_BSS static region_t res_reg[NUM_RESERVED_REGIONS];
 
-BOOT_CODE cap_t create_mapped_it_frame_cap(cap_t pd_cap, pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large, bool_t executable)
-{
-    cap_t cap;
-    vm_page_size_t frame_size;
+// BOOT_CODE cap_t create_mapped_it_frame_cap(cap_t pd_cap, pptr_t pptr, vptr_t vptr, asid_t asid, bool_t use_large, bool_t executable)
+// {
+//     cap_t cap;
+//     vm_page_size_t frame_size;
 
-    if (use_large)
-    {
-        frame_size = RISCV_Mega_Page;
-    }
-    else
-    {
-        frame_size = RISCV_4K_Page;
-    }
+//     if (use_large)
+//     {
+//         frame_size = RISCV_Mega_Page;
+//     }
+//     else
+//     {
+//         frame_size = RISCV_4K_Page;
+//     }
 
-    cap = cap_frame_cap_new(
-        asid,                          /* capFMappedASID       */
-        pptr,                          /* capFBasePtr          */
-        frame_size,                    /* capFSize             */
-        wordFromVMRights(VMReadWrite), /* capFVMRights         */
-        0,                             /* capFIsDevice         */
-        vptr                           /* capFMappedAddress    */
-    );
+//     cap = cap_frame_cap_new(
+//         asid,                          /* capFMappedASID       */
+//         pptr,                          /* capFBasePtr          */
+//         frame_size,                    /* capFSize             */
+//         wordFromVMRights(VMReadWrite), /* capFVMRights         */
+//         0,                             /* capFIsDevice         */
+//         vptr                           /* capFMappedAddress    */
+//     );
 
-    map_it_frame_cap(pd_cap, cap);
-    return cap;
-}
+//     map_it_frame_cap(pd_cap, cap);
+//     return cap;
+// }
 
 __attribute__((unused)) BOOT_CODE static bool_t arch_init_freemem(region_t ui_reg,
                                                                   p_region_t dtb_p_reg,
