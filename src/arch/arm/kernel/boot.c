@@ -666,7 +666,6 @@ BOOT_CODE VISIBLE void init_kernel(
                              dtb_addr_p, dtb_size);
 
 #endif /* ENABLE_SMP_SUPPORT */
-    printf("REL4_kernel BOOT CODE");
 
     if (!result) {
         fail("ERROR: kernel init failed");
