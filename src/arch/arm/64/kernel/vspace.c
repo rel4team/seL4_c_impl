@@ -208,32 +208,32 @@ vm_rights_t CONST maskVMRights(vm_rights_t vm_rights, seL4_CapRights_t cap_right
 //  * VA range so that the 54th bit is XN. Setting the bit to 0 allows execution.
 //  *
 //  */
-BOOT_CODE void map_kernel_frame(paddr_t paddr, pptr_t vaddr, vm_rights_t vm_rights, vm_attributes_t attributes)
-{
-    assert(vaddr >= PPTR_TOP);
+// BOOT_CODE void map_kernel_frame(paddr_t paddr, pptr_t vaddr, vm_rights_t vm_rights, vm_attributes_t attributes)
+// {
+//     assert(vaddr >= PPTR_TOP);
 
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    word_t uxn = vm_attributes_get_armExecuteNever(attributes);
-#else
-    word_t uxn = 1; /* unprivileged execute never */
-#endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
-    word_t attr_index;
-    word_t shareable;
-    if (vm_attributes_get_armPageCacheable(attributes)) {
-        attr_index = NORMAL;
-        shareable = SMP_TERNARY(SMP_SHARE, 0);
-    } else {
-        attr_index = DEVICE_nGnRnE;
-        shareable = 0;
-    }
-    armKSGlobalKernelPT[GET_PT_INDEX(vaddr)] = pte_new(uxn, paddr,
-                                                       0, /* global */
-                                                       1, /* access flag */
-                                                       shareable,
-                                                       APFromVMRights(vm_rights),
-                                                       attr_index,
-                                                       RESERVED);
-}
+// #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+//     word_t uxn = vm_attributes_get_armExecuteNever(attributes);
+// #else
+//     word_t uxn = 1; /* unprivileged execute never */
+// #endif /* CONFIG_ARM_HYPERVISOR_SUPPORT */
+//     word_t attr_index;
+//     word_t shareable;
+//     if (vm_attributes_get_armPageCacheable(attributes)) {
+//         attr_index = NORMAL;
+//         shareable = SMP_TERNARY(SMP_SHARE, 0);
+//     } else {
+//         attr_index = DEVICE_nGnRnE;
+//         shareable = 0;
+//     }
+//     armKSGlobalKernelPT[GET_PT_INDEX(vaddr)] = pte_new(uxn, paddr,
+//                                                        0, /* global */
+//                                                        1, /* access flag */
+//                                                        shareable,
+//                                                        APFromVMRights(vm_rights),
+//                                                        attr_index,
+//                                                        RESERVED);
+// }
 
 BOOT_CODE void map_kernel_window(void)
 {
