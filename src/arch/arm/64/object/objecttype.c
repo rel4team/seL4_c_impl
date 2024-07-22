@@ -138,7 +138,7 @@ cap_t CONST Arch_maskCapRights(seL4_CapRights_t cap_rights_mask, cap_t cap)
 // finaliseCap_ret_t Arch_finaliseCap(cap_t cap, bool_t final)
 // {
 //     finaliseCap_ret_t fc_ret;
-
+//     printf("unmap cap frame cap %d\n", cap_get_capType(cap));
 //     switch (cap_get_capType(cap)) {
 //     case cap_asid_pool_cap:
 //         if (final) {
@@ -191,6 +191,7 @@ cap_t CONST Arch_maskCapRights(seL4_CapRights_t cap_rights_mask, cap_t cap)
 //         break;
 
 //     case cap_page_table_cap:
+//         printf("unmapPageTable\n");
 //         if (final && cap_page_table_cap_get_capPTIsMapped(cap)) {
 //             unmapPageTable(cap_page_table_cap_get_capPTMappedASID(cap),
 //                            cap_page_table_cap_get_capPTMappedAddress(cap),
@@ -199,6 +200,7 @@ cap_t CONST Arch_maskCapRights(seL4_CapRights_t cap_rights_mask, cap_t cap)
 //         break;
 
 //     case cap_frame_cap:
+//         printf("unmapPage\n");
 //         if (cap_frame_cap_get_capFMappedASID(cap)) {
 //             unmapPage(cap_frame_cap_get_capFSize(cap),
 //                       cap_frame_cap_get_capFMappedASID(cap),
