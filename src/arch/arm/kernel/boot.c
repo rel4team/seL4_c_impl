@@ -114,7 +114,7 @@ BOOT_CODE static bool_t arch_init_freemem(p_region_t ui_p_reg,
 }
 
 
-BOOT_CODE static void init_irqs(cap_t root_cnode_cap)
+BOOT_CODE void init_irqs(cap_t root_cnode_cap)
 {
     unsigned i;
 
