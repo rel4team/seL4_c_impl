@@ -135,105 +135,105 @@ cap_t CONST Arch_maskCapRights(seL4_CapRights_t cap_rights_mask, cap_t cap)
     }
 }
 
-finaliseCap_ret_t Arch_finaliseCap(cap_t cap, bool_t final)
-{
-    finaliseCap_ret_t fc_ret;
+// finaliseCap_ret_t Arch_finaliseCap(cap_t cap, bool_t final)
+// {
+//     finaliseCap_ret_t fc_ret;
 
-    switch (cap_get_capType(cap)) {
-    case cap_asid_pool_cap:
-        if (final) {
-            deleteASIDPool(cap_asid_pool_cap_get_capASIDBase(cap),
-                           ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap)));
-        }
-        break;
+//     switch (cap_get_capType(cap)) {
+//     case cap_asid_pool_cap:
+//         if (final) {
+//             deleteASIDPool(cap_asid_pool_cap_get_capASIDBase(cap),
+//                            ASID_POOL_PTR(cap_asid_pool_cap_get_capASIDPool(cap)));
+//         }
+//         break;
 
-    case cap_page_global_directory_cap:
-#ifdef CONFIG_ARM_SMMU
-        if (cap_page_global_directory_cap_get_capPGDMappedCB(cap) != CB_INVALID) {
-            smmu_cb_delete_vspace(cap_page_global_directory_cap_get_capPGDMappedCB(cap),
-                                  cap_page_global_directory_cap_get_capPGDMappedASID(cap));
-        }
-#endif
-        if (final && cap_page_global_directory_cap_get_capPGDIsMapped(cap)) {
-            deleteASID(cap_page_global_directory_cap_get_capPGDMappedASID(cap),
-                       VSPACE_PTR(cap_page_global_directory_cap_get_capPGDBasePtr(cap)));
-        }
-        break;
+//     case cap_page_global_directory_cap:
+// #ifdef CONFIG_ARM_SMMU
+//         if (cap_page_global_directory_cap_get_capPGDMappedCB(cap) != CB_INVALID) {
+//             smmu_cb_delete_vspace(cap_page_global_directory_cap_get_capPGDMappedCB(cap),
+//                                   cap_page_global_directory_cap_get_capPGDMappedASID(cap));
+//         }
+// #endif
+//         if (final && cap_page_global_directory_cap_get_capPGDIsMapped(cap)) {
+//             deleteASID(cap_page_global_directory_cap_get_capPGDMappedASID(cap),
+//                        VSPACE_PTR(cap_page_global_directory_cap_get_capPGDBasePtr(cap)));
+//         }
+//         break;
 
-    case cap_page_upper_directory_cap:
-#ifdef AARCH64_VSPACE_S2_START_L1
-#ifdef CONFIG_ARM_SMMU
-        if (cap_page_upper_directory_cap_get_capPGDMappedCB(cap) != CB_INVALID) {
-            smmu_cb_delete_vspace(cap_page_upper_directory_cap_get_capPUDMappedCB(cap),
-                                  cap_page_upper_directory_cap_get_capPUDMappedASID(cap));
-        }
-#endif
-        if (final && cap_page_upper_directory_cap_get_capPUDIsMapped(cap)) {
-            deleteASID(cap_page_upper_directory_cap_get_capPUDMappedASID(cap),
-                       PUDE_PTR(cap_page_upper_directory_cap_get_capPUDBasePtr(cap)));
-        }
-#else
-        if (final && cap_page_upper_directory_cap_get_capPUDIsMapped(cap)) {
-            unmapPageUpperDirectory(cap_page_upper_directory_cap_get_capPUDMappedASID(cap),
-                                    cap_page_upper_directory_cap_get_capPUDMappedAddress(cap),
-                                    PUDE_PTR(cap_page_upper_directory_cap_get_capPUDBasePtr(cap)));
-        }
+//     case cap_page_upper_directory_cap:
+// #ifdef AARCH64_VSPACE_S2_START_L1
+// #ifdef CONFIG_ARM_SMMU
+//         if (cap_page_upper_directory_cap_get_capPGDMappedCB(cap) != CB_INVALID) {
+//             smmu_cb_delete_vspace(cap_page_upper_directory_cap_get_capPUDMappedCB(cap),
+//                                   cap_page_upper_directory_cap_get_capPUDMappedASID(cap));
+//         }
+// #endif
+//         if (final && cap_page_upper_directory_cap_get_capPUDIsMapped(cap)) {
+//             deleteASID(cap_page_upper_directory_cap_get_capPUDMappedASID(cap),
+//                        PUDE_PTR(cap_page_upper_directory_cap_get_capPUDBasePtr(cap)));
+//         }
+// #else
+//         if (final && cap_page_upper_directory_cap_get_capPUDIsMapped(cap)) {
+//             unmapPageUpperDirectory(cap_page_upper_directory_cap_get_capPUDMappedASID(cap),
+//                                     cap_page_upper_directory_cap_get_capPUDMappedAddress(cap),
+//                                     PUDE_PTR(cap_page_upper_directory_cap_get_capPUDBasePtr(cap)));
+//         }
 
-#endif
-        break;
+// #endif
+//         break;
 
-    case cap_page_directory_cap:
-        if (final && cap_page_directory_cap_get_capPDIsMapped(cap)) {
-            unmapPageDirectory(cap_page_directory_cap_get_capPDMappedASID(cap),
-                               cap_page_directory_cap_get_capPDMappedAddress(cap),
-                               PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(cap)));
-        }
-        break;
+//     case cap_page_directory_cap:
+//         if (final && cap_page_directory_cap_get_capPDIsMapped(cap)) {
+//             unmapPageDirectory(cap_page_directory_cap_get_capPDMappedASID(cap),
+//                                cap_page_directory_cap_get_capPDMappedAddress(cap),
+//                                PDE_PTR(cap_page_directory_cap_get_capPDBasePtr(cap)));
+//         }
+//         break;
 
-    case cap_page_table_cap:
-        if (final && cap_page_table_cap_get_capPTIsMapped(cap)) {
-            unmapPageTable(cap_page_table_cap_get_capPTMappedASID(cap),
-                           cap_page_table_cap_get_capPTMappedAddress(cap),
-                           PTE_PTR(cap_page_table_cap_get_capPTBasePtr(cap)));
-        }
-        break;
+//     case cap_page_table_cap:
+//         if (final && cap_page_table_cap_get_capPTIsMapped(cap)) {
+//             unmapPageTable(cap_page_table_cap_get_capPTMappedASID(cap),
+//                            cap_page_table_cap_get_capPTMappedAddress(cap),
+//                            PTE_PTR(cap_page_table_cap_get_capPTBasePtr(cap)));
+//         }
+//         break;
 
-    case cap_frame_cap:
-        if (cap_frame_cap_get_capFMappedASID(cap)) {
-            unmapPage(cap_frame_cap_get_capFSize(cap),
-                      cap_frame_cap_get_capFMappedASID(cap),
-                      cap_frame_cap_get_capFMappedAddress(cap),
-                      cap_frame_cap_get_capFBasePtr(cap));
-        }
-        break;
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case cap_vcpu_cap:
-        if (final) {
-            vcpu_finalise(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)));
-        }
-        break;
-#endif
-#ifdef CONFIG_ARM_SMMU
-    case cap_cb_cap:
-        if (cap_cb_cap_get_capBindSID(cap) != SID_INVALID) {
-            smmu_sid_unbind(cap_cb_cap_get_capBindSID(cap));
-        }
-        if (final) {
-            smmu_delete_cb(cap);
-        }
-        break;
-    case cap_sid_cap:
-        if (final) {
-            smmu_delete_sid(cap);
-        }
-        break;
-#endif
-    }
+//     case cap_frame_cap:
+//         if (cap_frame_cap_get_capFMappedASID(cap)) {
+//             unmapPage(cap_frame_cap_get_capFSize(cap),
+//                       cap_frame_cap_get_capFMappedASID(cap),
+//                       cap_frame_cap_get_capFMappedAddress(cap),
+//                       cap_frame_cap_get_capFBasePtr(cap));
+//         }
+//         break;
+// #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+//     case cap_vcpu_cap:
+//         if (final) {
+//             vcpu_finalise(VCPU_PTR(cap_vcpu_cap_get_capVCPUPtr(cap)));
+//         }
+//         break;
+// #endif
+// #ifdef CONFIG_ARM_SMMU
+//     case cap_cb_cap:
+//         if (cap_cb_cap_get_capBindSID(cap) != SID_INVALID) {
+//             smmu_sid_unbind(cap_cb_cap_get_capBindSID(cap));
+//         }
+//         if (final) {
+//             smmu_delete_cb(cap);
+//         }
+//         break;
+//     case cap_sid_cap:
+//         if (final) {
+//             smmu_delete_sid(cap);
+//         }
+//         break;
+// #endif
+//     }
 
-    fc_ret.remainder = cap_null_cap_new();
-    fc_ret.cleanupInfo = cap_null_cap_new();
-    return fc_ret;
-}
+//     fc_ret.remainder = cap_null_cap_new();
+//     fc_ret.cleanupInfo = cap_null_cap_new();
+//     return fc_ret;
+// }
 
 bool_t CONST Arch_sameRegionAs(cap_t cap_a, cap_t cap_b)
 {
