@@ -105,7 +105,7 @@ extern word_t ksDomScheduleIdx;
 word_t tlbLockCount = 0;
 
 /* Idle thread. */
-SECTION("._idle_thread") char ksIdleThreadTCB[CONFIG_MAX_NUM_NODES][BIT(seL4_TCBBits)] ALIGN(BIT(TCB_SIZE_BITS));
+// SECTION("._idle_thread") char ksIdleThreadTCB[CONFIG_MAX_NUM_NODES][BIT(seL4_TCBBits)] ALIGN(BIT(TCB_SIZE_BITS));
 
 #ifdef CONFIG_KERNEL_MCS
 /* Idle thread Schedcontexts */
