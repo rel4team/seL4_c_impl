@@ -466,83 +466,83 @@ BOOT_CODE void create_idle_thread(void)
 #endif /* ENABLE_SMP_SUPPORT */
 }
 
-BOOT_CODE tcb_t *create_initial_thread(cap_t root_cnode_cap, cap_t it_pd_cap, vptr_t ui_v_entry, vptr_t bi_frame_vptr,
-                                       vptr_t ipcbuf_vptr, cap_t ipcbuf_cap)
-{
-    tcb_t *tcb = TCB_PTR(rootserver.tcb + TCB_OFFSET);
-#ifndef CONFIG_KERNEL_MCS
-    tcb->tcbTimeSlice = CONFIG_TIME_SLICE;
-#endif
+// BOOT_CODE tcb_t *create_initial_thread(cap_t root_cnode_cap, cap_t it_pd_cap, vptr_t ui_v_entry, vptr_t bi_frame_vptr,
+//                                        vptr_t ipcbuf_vptr, cap_t ipcbuf_cap)
+// {
+//     tcb_t *tcb = TCB_PTR(rootserver.tcb + TCB_OFFSET);
+// #ifndef CONFIG_KERNEL_MCS
+//     tcb->tcbTimeSlice = CONFIG_TIME_SLICE;
+// #endif
 
-    Arch_initContext(&tcb->tcbArch.tcbContext);
+//     Arch_initContext(&tcb->tcbArch.tcbContext);
 
-    /* derive a copy of the IPC buffer cap for inserting */
-    deriveCap_ret_t dc_ret = deriveCap(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadIPCBuffer),(cap_t*)& ipcbuf_cap);
-    if (dc_ret.status != EXCEPTION_NONE) {
-        printf("Failed to derive copy of IPC Buffer\n");
-        return NULL;
-    }
+//     /* derive a copy of the IPC buffer cap for inserting */
+//     deriveCap_ret_t dc_ret = deriveCap(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadIPCBuffer),(cap_t*)& ipcbuf_cap);
+//     if (dc_ret.status != EXCEPTION_NONE) {
+//         printf("Failed to derive copy of IPC Buffer\n");
+//         return NULL;
+//     }
 
-    // /* initialise TCB (corresponds directly to abstract specification) */
-    // cteInsert(
-    //     root_cnode_cap,
-    //     SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadCNode),
-    //     SLOT_PTR(rootserver.tcb, tcbCTable)
-    // );
-    // cteInsert(
-    //     it_pd_cap,
-    //     SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadVSpace),
-    //     SLOT_PTR(rootserver.tcb, tcbVTable)
-    // );
-    // cteInsert(
-    //     dc_ret.cap,
-    //     SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadIPCBuffer),
-    //     SLOT_PTR(rootserver.tcb, tcbBuffer)
-    // );
-    tcb->tcbIPCBuffer = ipcbuf_vptr;
+//     // /* initialise TCB (corresponds directly to abstract specification) */
+//     // cteInsert(
+//     //     root_cnode_cap,
+//     //     SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadCNode),
+//     //     SLOT_PTR(rootserver.tcb, tcbCTable)
+//     // );
+//     // cteInsert(
+//     //     it_pd_cap,
+//     //     SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadVSpace),
+//     //     SLOT_PTR(rootserver.tcb, tcbVTable)
+//     // );
+//     // cteInsert(
+//     //     dc_ret.cap,
+//     //     SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadIPCBuffer),
+//     //     SLOT_PTR(rootserver.tcb, tcbBuffer)
+//     // );
+//     tcb->tcbIPCBuffer = ipcbuf_vptr;
 
-    setRegister(tcb, capRegister, bi_frame_vptr);
-    setNextPC(tcb, ui_v_entry);
+//     setRegister(tcb, capRegister, bi_frame_vptr);
+//     setNextPC(tcb, ui_v_entry);
 
-    /* initialise TCB */
-#ifdef CONFIG_KERNEL_MCS
-    configure_sched_context(tcb, SC_PTR(rootserver.sc), usToTicks(CONFIG_BOOT_THREAD_TIME_SLICE * US_IN_MS));
-#endif
+//     /* initialise TCB */
+// #ifdef CONFIG_KERNEL_MCS
+//     configure_sched_context(tcb, SC_PTR(rootserver.sc), usToTicks(CONFIG_BOOT_THREAD_TIME_SLICE * US_IN_MS));
+// #endif
 
-    tcb->tcbPriority = seL4_MaxPrio;
-    tcb->tcbMCP = seL4_MaxPrio;
-    tcb->tcbDomain = ksDomSchedule[ksDomScheduleIdx].domain;
-#ifndef CONFIG_KERNEL_MCS
-    setupReplyMaster(tcb);
-#endif
-    setThreadState(tcb, ThreadState_Running);
+//     tcb->tcbPriority = seL4_MaxPrio;
+//     tcb->tcbMCP = seL4_MaxPrio;
+//     tcb->tcbDomain = ksDomSchedule[ksDomScheduleIdx].domain;
+// #ifndef CONFIG_KERNEL_MCS
+//     setupReplyMaster(tcb);
+// #endif
+//     setThreadState(tcb, ThreadState_Running);
 
-    ksCurDomain = ksDomSchedule[ksDomScheduleIdx].domain;
-#ifdef CONFIG_KERNEL_MCS
-    ksDomainTime = usToTicks(ksDomSchedule[ksDomScheduleIdx].length * US_IN_MS);
-#else
-    ksDomainTime = ksDomSchedule[ksDomScheduleIdx].length;
-#endif
-    assert(ksCurDomain < CONFIG_NUM_DOMAINS && ksDomainTime > 0);
+//     ksCurDomain = ksDomSchedule[ksDomScheduleIdx].domain;
+// #ifdef CONFIG_KERNEL_MCS
+//     ksDomainTime = usToTicks(ksDomSchedule[ksDomScheduleIdx].length * US_IN_MS);
+// #else
+//     ksDomainTime = ksDomSchedule[ksDomScheduleIdx].length;
+// #endif
+//     assert(ksCurDomain < CONFIG_NUM_DOMAINS && ksDomainTime > 0);
 
-#ifndef CONFIG_KERNEL_MCS
-    SMP_COND_STATEMENT(tcb->tcbAffinity = 0);
-#endif
+// #ifndef CONFIG_KERNEL_MCS
+//     SMP_COND_STATEMENT(tcb->tcbAffinity = 0);
+// #endif
 
-    /* create initial thread's TCB cap */
-    cap_t cap = cap_thread_cap_new(TCB_REF(tcb));
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadTCB), cap);
+//     /* create initial thread's TCB cap */
+//     cap_t cap = cap_thread_cap_new(TCB_REF(tcb));
+//     write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadTCB), cap);
 
-#ifdef CONFIG_KERNEL_MCS
-    cap = cap_sched_context_cap_new(SC_REF(tcb->tcbSchedContext), seL4_MinSchedContextBits);
-    write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadSC), cap);
-#endif
-#ifdef CONFIG_DEBUG_BUILD
-    setThreadName(tcb, "rootserver");
-#endif
+// #ifdef CONFIG_KERNEL_MCS
+//     cap = cap_sched_context_cap_new(SC_REF(tcb->tcbSchedContext), seL4_MinSchedContextBits);
+//     write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadSC), cap);
+// #endif
+// #ifdef CONFIG_DEBUG_BUILD
+//     setThreadName(tcb, "rootserver");
+// #endif
 
-    return tcb;
-}
+//     return tcb;
+// }
 
 #ifdef ENABLE_SMP_CLOCK_SYNC_TEST_ON_BOOT
 BOOT_CODE void clock_sync_test(void)
