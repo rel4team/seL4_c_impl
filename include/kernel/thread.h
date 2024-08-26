@@ -201,16 +201,16 @@ void rescheduleRequired(void);
 /* declare that the thread has had its registers (in its user_context_t) modified and it
  * should ignore any 'efficient' restores next time it is run, and instead restore all
  * registers into their correct place */
-void Arch_postModifyRegisters(tcb_t *tptr);
+// void Arch_postModifyRegisters(tcb_t *tptr);
 
 /* Updates a threads FaultIP to match its NextIP. This is used to indicate that a
  * thread has completed its fault and by updating the restartPC means that if the thread
  * should get restarted in the future for any reason it is restart in such a way as to
  * not cause the fault again. */
-static inline void updateRestartPC(tcb_t *tcb)
-{
-    setRegister(tcb, FaultIP, getRegister(tcb, NextIP));
-}
+// static inline void updateRestartPC(tcb_t *tcb)
+// {
+//     setRegister(tcb, FaultIP, getRegister(tcb, NextIP));
+// }
 
 #ifdef CONFIG_KERNEL_MCS
 /* End the timeslice for the current thread.

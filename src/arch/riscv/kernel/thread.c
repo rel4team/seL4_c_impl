@@ -13,7 +13,7 @@
 #include <arch/kernel/thread.h>
 #include <linker.h>
 
-extern char kernel_stack_alloc[CONFIG_MAX_NUM_NODES][BIT(CONFIG_KERNEL_STACK_BITS)];
+// extern char kernel_stack_alloc[CONFIG_MAX_NUM_NODES][BIT(CONFIG_KERNEL_STACK_BITS)];
 
 // void Arch_switchToThread(tcb_t *tcb)
 // {
@@ -46,12 +46,12 @@ extern char kernel_stack_alloc[CONFIG_MAX_NUM_NODES][BIT(CONFIG_KERNEL_STACK_BIT
 //     setVMRoot(tcb);
 // }
 
-void Arch_activateIdleThread(tcb_t *tcb)
-{
-    /* Don't need to do anything */
-}
+// void Arch_activateIdleThread(tcb_t *tcb)
+// {
+//     /* Don't need to do anything */
+// }
 
-void Arch_postModifyRegisters(tcb_t *tptr)
-{
-    /* Nothing to do */
-}
+// void Arch_postModifyRegisters(tcb_t *tptr)
+// {
+//     /* Nothing to do */
+// }

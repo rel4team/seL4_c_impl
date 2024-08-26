@@ -25,15 +25,15 @@
 //     setRegister(tcb, ELR_EL1, (word_t)&idle_thread);
 // }
 
-void Arch_switchToIdleThread(void)
-{
-    if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-        vcpu_switch(NULL);
-    }
-    setCurrentUserVSpaceRoot(ttbr_new(0, addrFromKPPtr(armKSGlobalUserVSpace)));
-}
+// void Arch_switchToIdleThread(void)
+// {
+//     if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
+//         vcpu_switch(NULL);
+//     }
+//     setCurrentUserVSpaceRoot(ttbr_new(0, addrFromKPPtr(armKSGlobalUserVSpace)));
+// }
 
-void Arch_activateIdleThread(tcb_t *tcb)
-{
-    /* Don't need to do anything */
-}
+// void Arch_activateIdleThread(tcb_t *tcb)
+// {
+//     /* Don't need to do anything */
+// }

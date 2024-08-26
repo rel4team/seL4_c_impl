@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
-#include <kernel/thread.h>
+// #include <kernel/thread.h>
 
-void Arch_postModifyRegisters(tcb_t *tptr)
-{
-    /* Nothing to do */
-}
+// void Arch_postModifyRegisters(tcb_t *tptr)
+// {
+//     /* Nothing to do */
+// }
