@@ -72,206 +72,206 @@
 //     return EXCEPTION_NONE;
 // }
 
-exception_t handleUnknownSyscall(word_t w)
-{
-    // printf("hello handleUnknownSyscall, w: %ld\n", w);
-#ifdef CONFIG_PRINTING
-    if (w == SysDebugPutChar)
-    {
-        kernel_putchar(getRegister(NODE_STATE(ksCurThread), capRegister));
-        return EXCEPTION_NONE;
-    }
-    if (w == SysDebugDumpScheduler)
-    {
-#ifdef CONFIG_DEBUG_BUILD
-        debug_dumpScheduler();
-#endif
-        return EXCEPTION_NONE;
-    }
-#endif
-#ifdef CONFIG_DEBUG_BUILD
-    if (w == SysDebugHalt)
-    {
-        tcb_t *UNUSED tptr = NODE_STATE(ksCurThread);
-        printf("Debug halt syscall from user thread %p \"%s\"\n", tptr, TCB_PTR_DEBUG_PTR(tptr)->tcbName);
-        halt();
-    }
-    if (w == SysDebugSnapshot)
-    {
-        tcb_t *UNUSED tptr = NODE_STATE(ksCurThread);
-        printf("Debug snapshot syscall from user thread %p \"%s\"\n",
-               tptr, TCB_PTR_DEBUG_PTR(tptr)->tcbName);
-        debug_capDL();
-        return EXCEPTION_NONE;
-    }
-    if (w == SysDebugCapIdentify)
-    {
-        word_t cptr = getRegister(NODE_STATE(ksCurThread), capRegister);
-        lookupCapAndSlot_ret_t lu_ret = lookupCapAndSlot(NODE_STATE(ksCurThread), cptr);
-        word_t cap_type = cap_get_capType(lu_ret.cap);
-        setRegister(NODE_STATE(ksCurThread), capRegister, cap_type);
-        return EXCEPTION_NONE;
-    }
+// exception_t handleUnknownSyscall(word_t w)
+// {
+//     // printf("hello handleUnknownSyscall, w: %ld\n", w);
+// #ifdef CONFIG_PRINTING
+//     if (w == SysDebugPutChar)
+//     {
+//         kernel_putchar(getRegister(NODE_STATE(ksCurThread), capRegister));
+//         return EXCEPTION_NONE;
+//     }
+//     if (w == SysDebugDumpScheduler)
+//     {
+// #ifdef CONFIG_DEBUG_BUILD
+//         debug_dumpScheduler();
+// #endif
+//         return EXCEPTION_NONE;
+//     }
+// #endif
+// #ifdef CONFIG_DEBUG_BUILD
+//     if (w == SysDebugHalt)
+//     {
+//         tcb_t *UNUSED tptr = NODE_STATE(ksCurThread);
+//         printf("Debug halt syscall from user thread %p \"%s\"\n", tptr, TCB_PTR_DEBUG_PTR(tptr)->tcbName);
+//         halt();
+//     }
+//     if (w == SysDebugSnapshot)
+//     {
+//         tcb_t *UNUSED tptr = NODE_STATE(ksCurThread);
+//         printf("Debug snapshot syscall from user thread %p \"%s\"\n",
+//                tptr, TCB_PTR_DEBUG_PTR(tptr)->tcbName);
+//         debug_capDL();
+//         return EXCEPTION_NONE;
+//     }
+//     if (w == SysDebugCapIdentify)
+//     {
+//         word_t cptr = getRegister(NODE_STATE(ksCurThread), capRegister);
+//         lookupCapAndSlot_ret_t lu_ret = lookupCapAndSlot(NODE_STATE(ksCurThread), cptr);
+//         word_t cap_type = cap_get_capType(lu_ret.cap);
+//         setRegister(NODE_STATE(ksCurThread), capRegister, cap_type);
+//         return EXCEPTION_NONE;
+//     }
 
-    if (w == SysDebugNameThread)
-    {
-        /* This is a syscall meant to aid debugging, so if anything goes wrong
-         * then assume the system is completely misconfigured and halt */
-        const char *name;
-        word_t len;
-        word_t cptr = getRegister(NODE_STATE(ksCurThread), capRegister);
-        lookupCapAndSlot_ret_t lu_ret = lookupCapAndSlot(NODE_STATE(ksCurThread), cptr);
-        /* ensure we got a TCB cap */
-        word_t cap_type = cap_get_capType(lu_ret.cap);
-        if (cap_type != cap_thread_cap)
-        {
-            userError("SysDebugNameThread: cap is not a TCB, halting");
-            halt();
-        }
-        /* Add 1 to the IPC buffer to skip the message info word */
-        name = (const char *)(lookupIPCBuffer(true, NODE_STATE(ksCurThread)) + 1);
-        if (!name)
-        {
-            userError("SysDebugNameThread: Failed to lookup IPC buffer, halting");
-            halt();
-        }
-        /* ensure the name isn't too long */
-        len = strnlen(name, seL4_MsgMaxLength * sizeof(word_t));
-        if (len == seL4_MsgMaxLength * sizeof(word_t))
-        {
-            userError("SysDebugNameThread: Name too long, halting");
-            halt();
-        }
-        setThreadName(TCB_PTR(cap_thread_cap_get_capTCBPtr(lu_ret.cap)), name);
-        // printf("hello SysDebugNameThread, name: %s\n", name);
-        return EXCEPTION_NONE;
-    }
-#ifdef ENABLE_SMP_SUPPORT
-    if (w == SysDebugSendIPI)
-    {
-        return handle_SysDebugSendIPI();
-    }
-#endif /* ENABLE_SMP_SUPPORT */
-#endif /* CONFIG_DEBUG_BUILD */
+//     if (w == SysDebugNameThread)
+//     {
+//         /* This is a syscall meant to aid debugging, so if anything goes wrong
+//          * then assume the system is completely misconfigured and halt */
+//         const char *name;
+//         word_t len;
+//         word_t cptr = getRegister(NODE_STATE(ksCurThread), capRegister);
+//         lookupCapAndSlot_ret_t lu_ret = lookupCapAndSlot(NODE_STATE(ksCurThread), cptr);
+//         /* ensure we got a TCB cap */
+//         word_t cap_type = cap_get_capType(lu_ret.cap);
+//         if (cap_type != cap_thread_cap)
+//         {
+//             userError("SysDebugNameThread: cap is not a TCB, halting");
+//             halt();
+//         }
+//         /* Add 1 to the IPC buffer to skip the message info word */
+//         name = (const char *)(lookupIPCBuffer(true, NODE_STATE(ksCurThread)) + 1);
+//         if (!name)
+//         {
+//             userError("SysDebugNameThread: Failed to lookup IPC buffer, halting");
+//             halt();
+//         }
+//         /* ensure the name isn't too long */
+//         len = strnlen(name, seL4_MsgMaxLength * sizeof(word_t));
+//         if (len == seL4_MsgMaxLength * sizeof(word_t))
+//         {
+//             userError("SysDebugNameThread: Name too long, halting");
+//             halt();
+//         }
+//         setThreadName(TCB_PTR(cap_thread_cap_get_capTCBPtr(lu_ret.cap)), name);
+//         // printf("hello SysDebugNameThread, name: %s\n", name);
+//         return EXCEPTION_NONE;
+//     }
+// #ifdef ENABLE_SMP_SUPPORT
+//     if (w == SysDebugSendIPI)
+//     {
+//         return handle_SysDebugSendIPI();
+//     }
+// #endif /* ENABLE_SMP_SUPPORT */
+// #endif /* CONFIG_DEBUG_BUILD */
 
-#ifdef CONFIG_DANGEROUS_CODE_INJECTION
-    if (w == SysDebugRun)
-    {
-        ((void (*)(void *))getRegister(NODE_STATE(ksCurThread), capRegister))((void *)getRegister(NODE_STATE(ksCurThread),
-                                                                                                  msgInfoRegister));
-        return EXCEPTION_NONE;
-    }
-#endif
+// #ifdef CONFIG_DANGEROUS_CODE_INJECTION
+//     if (w == SysDebugRun)
+//     {
+//         ((void (*)(void *))getRegister(NODE_STATE(ksCurThread), capRegister))((void *)getRegister(NODE_STATE(ksCurThread),
+//                                                                                                   msgInfoRegister));
+//         return EXCEPTION_NONE;
+//     }
+// #endif
 
-#ifdef CONFIG_KERNEL_X86_DANGEROUS_MSR
-    if (w == SysX86DangerousWRMSR)
-    {
-        uint64_t val;
-        uint32_t reg = getRegister(NODE_STATE(ksCurThread), capRegister);
-        if (CONFIG_WORD_SIZE == 32)
-        {
-            val = (uint64_t)getSyscallArg(0, NULL) | ((uint64_t)getSyscallArg(1, NULL) << 32);
-        }
-        else
-        {
-            val = getSyscallArg(0, NULL);
-        }
-        x86_wrmsr(reg, val);
-        return EXCEPTION_NONE;
-    }
-    else if (w == SysX86DangerousRDMSR)
-    {
-        uint64_t val;
-        uint32_t reg = getRegister(NODE_STATE(ksCurThread), capRegister);
-        val = x86_rdmsr(reg);
-        int num = 1;
-        if (CONFIG_WORD_SIZE == 32)
-        {
-            setMR(NODE_STATE(ksCurThread), NULL, 0, val & 0xffffffff);
-            setMR(NODE_STATE(ksCurThread), NULL, 1, val >> 32);
-            num++;
-        }
-        else
-        {
-            setMR(NODE_STATE(ksCurThread), NULL, 0, val);
-        }
-        setRegister(NODE_STATE(ksCurThread), msgInfoRegister, wordFromMessageInfo(seL4_MessageInfo_new(0, 0, 0, num)));
-        return EXCEPTION_NONE;
-    }
-#endif
+// #ifdef CONFIG_KERNEL_X86_DANGEROUS_MSR
+//     if (w == SysX86DangerousWRMSR)
+//     {
+//         uint64_t val;
+//         uint32_t reg = getRegister(NODE_STATE(ksCurThread), capRegister);
+//         if (CONFIG_WORD_SIZE == 32)
+//         {
+//             val = (uint64_t)getSyscallArg(0, NULL) | ((uint64_t)getSyscallArg(1, NULL) << 32);
+//         }
+//         else
+//         {
+//             val = getSyscallArg(0, NULL);
+//         }
+//         x86_wrmsr(reg, val);
+//         return EXCEPTION_NONE;
+//     }
+//     else if (w == SysX86DangerousRDMSR)
+//     {
+//         uint64_t val;
+//         uint32_t reg = getRegister(NODE_STATE(ksCurThread), capRegister);
+//         val = x86_rdmsr(reg);
+//         int num = 1;
+//         if (CONFIG_WORD_SIZE == 32)
+//         {
+//             setMR(NODE_STATE(ksCurThread), NULL, 0, val & 0xffffffff);
+//             setMR(NODE_STATE(ksCurThread), NULL, 1, val >> 32);
+//             num++;
+//         }
+//         else
+//         {
+//             setMR(NODE_STATE(ksCurThread), NULL, 0, val);
+//         }
+//         setRegister(NODE_STATE(ksCurThread), msgInfoRegister, wordFromMessageInfo(seL4_MessageInfo_new(0, 0, 0, num)));
+//         return EXCEPTION_NONE;
+//     }
+// #endif
 
-#ifdef CONFIG_ENABLE_BENCHMARKS
-    switch (w)
-    {
-    case SysBenchmarkFlushCaches:
-        return handle_SysBenchmarkFlushCaches();
-    case SysBenchmarkResetLog:
-        return handle_SysBenchmarkResetLog();
-    case SysBenchmarkFinalizeLog:
-        return handle_SysBenchmarkFinalizeLog();
-#ifdef CONFIG_KERNEL_LOG_BUFFER
-    case SysBenchmarkSetLogBuffer:
-        return handle_SysBenchmarkSetLogBuffer();
-#endif /* CONFIG_KERNEL_LOG_BUFFER */
-#ifdef CONFIG_BENCHMARK_TRACK_UTILISATION
-    case SysBenchmarkGetThreadUtilisation:
-        return handle_SysBenchmarkGetThreadUtilisation();
-    case SysBenchmarkResetThreadUtilisation:
-        return handle_SysBenchmarkResetThreadUtilisation();
-#ifdef CONFIG_DEBUG_BUILD
-    case SysBenchmarkDumpAllThreadsUtilisation:
-        return handle_SysBenchmarkDumpAllThreadsUtilisation();
-    case SysBenchmarkResetAllThreadsUtilisation:
-        return handle_SysBenchmarkResetAllThreadsUtilisation();
-#endif /* CONFIG_DEBUG_BUILD */
-#endif /* CONFIG_BENCHMARK_TRACK_UTILISATION */
-    case SysBenchmarkNullSyscall:
-        return EXCEPTION_NONE;
-    default:
-        break; /* syscall is not for benchmarking */
-    }          /* end switch(w) */
-#endif         /* CONFIG_ENABLE_BENCHMARKS */
+// #ifdef CONFIG_ENABLE_BENCHMARKS
+//     switch (w)
+//     {
+//     case SysBenchmarkFlushCaches:
+//         return handle_SysBenchmarkFlushCaches();
+//     case SysBenchmarkResetLog:
+//         return handle_SysBenchmarkResetLog();
+//     case SysBenchmarkFinalizeLog:
+//         return handle_SysBenchmarkFinalizeLog();
+// #ifdef CONFIG_KERNEL_LOG_BUFFER
+//     case SysBenchmarkSetLogBuffer:
+//         return handle_SysBenchmarkSetLogBuffer();
+// #endif /* CONFIG_KERNEL_LOG_BUFFER */
+// #ifdef CONFIG_BENCHMARK_TRACK_UTILISATION
+//     case SysBenchmarkGetThreadUtilisation:
+//         return handle_SysBenchmarkGetThreadUtilisation();
+//     case SysBenchmarkResetThreadUtilisation:
+//         return handle_SysBenchmarkResetThreadUtilisation();
+// #ifdef CONFIG_DEBUG_BUILD
+//     case SysBenchmarkDumpAllThreadsUtilisation:
+//         return handle_SysBenchmarkDumpAllThreadsUtilisation();
+//     case SysBenchmarkResetAllThreadsUtilisation:
+//         return handle_SysBenchmarkResetAllThreadsUtilisation();
+// #endif /* CONFIG_DEBUG_BUILD */
+// #endif /* CONFIG_BENCHMARK_TRACK_UTILISATION */
+//     case SysBenchmarkNullSyscall:
+//         return EXCEPTION_NONE;
+//     default:
+//         break; /* syscall is not for benchmarking */
+//     }          /* end switch(w) */
+// #endif         /* CONFIG_ENABLE_BENCHMARKS */
 
-#ifdef CONFIG_GET_CLOCK   /* Support GetClock Syscall */
-    if (w == SysGetClock) {
-        #ifdef CONFIG_ARCH_RISCV
-        uint64_t current = riscv_read_time();
-        setRegister(NODE_STATE(ksCurThread), capRegister, current);
-        #endif
+// #ifdef CONFIG_GET_CLOCK   /* Support GetClock Syscall */
+//     if (w == SysGetClock) {
+//         #ifdef CONFIG_ARCH_RISCV
+//         uint64_t current = riscv_read_time();
+//         setRegister(NODE_STATE(ksCurThread), capRegister, current);
+//         #endif
 
-        #ifdef CONFIG_ARCH_ARM
-        // TODO: Implement the GetClock for ARM
-        #endif
-        return EXCEPTION_NONE;
-    }
-#endif
+//         #ifdef CONFIG_ARCH_ARM
+//         // TODO: Implement the GetClock for ARM
+//         #endif
+//         return EXCEPTION_NONE;
+//     }
+// #endif
 
-#ifdef CONFIG_LINUX_APP_SUPPORT /* Support Linux App Configuration */
+// #ifdef CONFIG_LINUX_APP_SUPPORT /* Support Linux App Configuration */
 
-#endif
+// #endif
 
-    MCS_DO_IF_BUDGET({
-#ifdef CONFIG_SET_TLS_BASE_SELF
-        if (w == SysSetTLSBase)
-        {
-            word_t tls_base = getRegister(NODE_STATE(ksCurThread), capRegister);
-            /*
-             * This updates the real register as opposed to the thread state
-             * value. For many architectures, the TLS variables only get
-             * updated on a thread switch.
-             */
-            return Arch_setTLSRegister(tls_base);
-        }
-#endif
-        current_fault = seL4_Fault_UnknownSyscall_new(w);
-        handleFault(NODE_STATE(ksCurThread));
-    })
+//     MCS_DO_IF_BUDGET({
+// #ifdef CONFIG_SET_TLS_BASE_SELF
+//         if (w == SysSetTLSBase)
+//         {
+//             word_t tls_base = getRegister(NODE_STATE(ksCurThread), capRegister);
+//             /*
+//              * This updates the real register as opposed to the thread state
+//              * value. For many architectures, the TLS variables only get
+//              * updated on a thread switch.
+//              */
+//             return Arch_setTLSRegister(tls_base);
+//         }
+// #endif
+//         current_fault = seL4_Fault_UnknownSyscall_new(w);
+//         handleFault(NODE_STATE(ksCurThread));
+//     })
 
-    schedule();
-    activateThread();
+//     schedule();
+//     activateThread();
 
-    return EXCEPTION_NONE;
-}
+//     return EXCEPTION_NONE;
+// }
 
 // exception_t handleUserLevelFault(word_t w_a, word_t w_b)
 // {
