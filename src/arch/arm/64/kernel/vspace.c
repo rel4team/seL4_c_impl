@@ -1037,47 +1037,47 @@ bool_t CONST isVTableRoot(cap_t cap)
 //     return true;
 // }
 
-pgde_t *pageUpperDirectoryMapped(asid_t asid, vptr_t vaddr, pude_t *pud)
-{
-    findVSpaceForASID_ret_t find_ret;
-    lookupPGDSlot_ret_t lu_ret;
+// pgde_t *pageUpperDirectoryMapped(asid_t asid, vptr_t vaddr, pude_t *pud)
+// {
+//     findVSpaceForASID_ret_t find_ret;
+//     lookupPGDSlot_ret_t lu_ret;
 
-    find_ret = findVSpaceForASID(asid);
-    if (find_ret.status != EXCEPTION_NONE) {
-        return NULL;
-    }
+//     find_ret = findVSpaceForASID(asid);
+//     if (find_ret.status != EXCEPTION_NONE) {
+//         return NULL;
+//     }
 
-    lu_ret = lookupPGDSlot(find_ret.vspace_root, vaddr);
-    if (pgde_pgde_pud_ptr_get_present(lu_ret.pgdSlot) &&
-        (pgde_pgde_pud_ptr_get_pud_base_address(lu_ret.pgdSlot) == pptr_to_paddr(pud))) {
-        return lu_ret.pgdSlot;
-    }
+//     lu_ret = lookupPGDSlot(find_ret.vspace_root, vaddr);
+//     if (pgde_pgde_pud_ptr_get_present(lu_ret.pgdSlot) &&
+//         (pgde_pgde_pud_ptr_get_pud_base_address(lu_ret.pgdSlot) == pptr_to_paddr(pud))) {
+//         return lu_ret.pgdSlot;
+//     }
 
-    return NULL;
-}
+//     return NULL;
+// }
 
-pude_t *pageDirectoryMapped(asid_t asid, vptr_t vaddr, pde_t *pd)
-{
-    findVSpaceForASID_ret_t find_ret;
-    lookupPUDSlot_ret_t lu_ret;
+// pude_t *pageDirectoryMapped(asid_t asid, vptr_t vaddr, pde_t *pd)
+// {
+//     findVSpaceForASID_ret_t find_ret;
+//     lookupPUDSlot_ret_t lu_ret;
 
-    find_ret = findVSpaceForASID(asid);
-    if (find_ret.status != EXCEPTION_NONE) {
-        return NULL;
-    }
+//     find_ret = findVSpaceForASID(asid);
+//     if (find_ret.status != EXCEPTION_NONE) {
+//         return NULL;
+//     }
 
-    lu_ret = lookupPUDSlot(find_ret.vspace_root, vaddr);
-    if (lu_ret.status != EXCEPTION_NONE) {
-        return NULL;
-    }
+//     lu_ret = lookupPUDSlot(find_ret.vspace_root, vaddr);
+//     if (lu_ret.status != EXCEPTION_NONE) {
+//         return NULL;
+//     }
 
-    if (pude_pude_pd_ptr_get_present(lu_ret.pudSlot) &&
-        (pude_pude_pd_ptr_get_pd_base_address(lu_ret.pudSlot) == pptr_to_paddr(pd))) {
-        return lu_ret.pudSlot;
-    }
+//     if (pude_pude_pd_ptr_get_present(lu_ret.pudSlot) &&
+//         (pude_pude_pd_ptr_get_pd_base_address(lu_ret.pudSlot) == pptr_to_paddr(pd))) {
+//         return lu_ret.pudSlot;
+//     }
 
-    return NULL;
-}
+//     return NULL;
+// }
 
 // #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
 
@@ -1259,66 +1259,66 @@ static inline void invalidateTLBByASID(asid_t asid)
 // #endif
 // }
 
-pde_t *pageTableMapped(asid_t asid, vptr_t vaddr, pte_t *pt)
-{
-    findVSpaceForASID_ret_t find_ret;
-    lookupPDSlot_ret_t lu_ret;
+// pde_t *pageTableMapped(asid_t asid, vptr_t vaddr, pte_t *pt)
+// {
+//     findVSpaceForASID_ret_t find_ret;
+//     lookupPDSlot_ret_t lu_ret;
 
-    find_ret = findVSpaceForASID(asid);
-    if (find_ret.status != EXCEPTION_NONE) {
-        return NULL;
-    }
+//     find_ret = findVSpaceForASID(asid);
+//     if (find_ret.status != EXCEPTION_NONE) {
+//         return NULL;
+//     }
 
-    lu_ret = lookupPDSlot(find_ret.vspace_root, vaddr);
-    if (lu_ret.status != EXCEPTION_NONE) {
-        return NULL;
-    }
+//     lu_ret = lookupPDSlot(find_ret.vspace_root, vaddr);
+//     if (lu_ret.status != EXCEPTION_NONE) {
+//         return NULL;
+//     }
 
-    if (pde_pde_small_ptr_get_present(lu_ret.pdSlot) &&
-        (pde_pde_small_ptr_get_pt_base_address(lu_ret.pdSlot) == pptr_to_paddr(pt))) {
-        return lu_ret.pdSlot;
-    }
+//     if (pde_pde_small_ptr_get_present(lu_ret.pdSlot) &&
+//         (pde_pde_small_ptr_get_pt_base_address(lu_ret.pdSlot) == pptr_to_paddr(pt))) {
+//         return lu_ret.pdSlot;
+//     }
 
-    return NULL;
-}
+//     return NULL;
+// }
 
-void unmapPageUpperDirectory(asid_t asid, vptr_t vaddr, pude_t *pud)
-{
-    pgde_t *pgdSlot;
+// void unmapPageUpperDirectory(asid_t asid, vptr_t vaddr, pude_t *pud)
+// {
+//     pgde_t *pgdSlot;
 
-    pgdSlot = pageUpperDirectoryMapped(asid, vaddr, pud);
-    if (likely(pgdSlot != NULL)) {
-        *pgdSlot = pgde_pgde_invalid_new();
-        cleanByVA_PoU((vptr_t)pgdSlot, pptr_to_paddr(pgdSlot));
-        invalidateTLBByASID(asid);
-    }
-}
+//     pgdSlot = pageUpperDirectoryMapped(asid, vaddr, pud);
+//     if (likely(pgdSlot != NULL)) {
+//         *pgdSlot = pgde_pgde_invalid_new();
+//         cleanByVA_PoU((vptr_t)pgdSlot, pptr_to_paddr(pgdSlot));
+//         invalidateTLBByASID(asid);
+//     }
+// }
 
-void unmapPageDirectory(asid_t asid, vptr_t vaddr, pde_t *pd)
-{
-    pude_t *pudSlot;
+// void unmapPageDirectory(asid_t asid, vptr_t vaddr, pde_t *pd)
+// {
+//     pude_t *pudSlot;
 
-    pudSlot = pageDirectoryMapped(asid, vaddr, pd);
-    if (likely(pudSlot != NULL)) {
-        *pudSlot = pude_invalid_new();
+//     pudSlot = pageDirectoryMapped(asid, vaddr, pd);
+//     if (likely(pudSlot != NULL)) {
+//         *pudSlot = pude_invalid_new();
 
-        cleanByVA_PoU((vptr_t)pudSlot, pptr_to_paddr(pudSlot));
-        invalidateTLBByASID(asid);
-    }
-}
+//         cleanByVA_PoU((vptr_t)pudSlot, pptr_to_paddr(pudSlot));
+//         invalidateTLBByASID(asid);
+//     }
+// }
 
-void unmapPageTable(asid_t asid, vptr_t vaddr, pte_t *pt)
-{
-    pde_t *pdSlot;
+// void unmapPageTable(asid_t asid, vptr_t vaddr, pte_t *pt)
+// {
+//     pde_t *pdSlot;
 
-    pdSlot = pageTableMapped(asid, vaddr, pt);
-    if (likely(pdSlot != NULL)) {
-        *pdSlot = pde_invalid_new();
+//     pdSlot = pageTableMapped(asid, vaddr, pt);
+//     if (likely(pdSlot != NULL)) {
+//         *pdSlot = pde_invalid_new();
 
-        cleanByVA_PoU((vptr_t)pdSlot, pptr_to_paddr(pdSlot));
-        invalidateTLBByASID(asid);
-    }
-}
+//         cleanByVA_PoU((vptr_t)pdSlot, pptr_to_paddr(pdSlot));
+//         invalidateTLBByASID(asid);
+//     }
+// }
 
 // void unmapPage(vm_page_size_t page_size, asid_t asid, vptr_t vptr, pptr_t pptr)
 // {
