@@ -367,14 +367,6 @@ word_t Arch_getObjectSize(word_t t)
         return ARMHugePageBits;
     case seL4_ARM_PageTableObject:
         return seL4_PageTableBits;
-    case seL4_ARM_PageDirectoryObject:
-        return seL4_PageDirBits;
-    case seL4_ARM_PageUpperDirectoryObject:
-        return seL4_PUDBits;
-#ifndef AARCH64_VSPACE_S2_START_L1
-    case seL4_ARM_PageGlobalDirectoryObject:
-        return seL4_PGDBits;
-#endif
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     case seL4_ARM_VCPUObject:
         return VCPU_SIZE_BITS;
