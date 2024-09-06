@@ -149,14 +149,6 @@ static word_t CONST APFromVMRights(vm_rights_t vm_rights)
             return 1;
         }
 
-    case VMKernelReadOnly:
-        if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-            /* no corresponding AP for S2AP, return None */
-            return 0;
-        } else {
-            return 2;
-        }
-
     case VMReadOnly:
         if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
             return 1;
@@ -468,10 +460,10 @@ BOOT_CODE word_t arch_get_n_paging(v_region_t it_v_reg)
 {
     return
 #ifndef AARCH64_VSPACE_S2_START_L1
-        get_n_paging(it_v_reg, PGD_INDEX_OFFSET) +
+        get_n_paging(it_v_reg, GET_ULVL_PGSIZE_BITS(ULVL_FRM_ARM_PT_LVL(0))) +
 #endif
-        get_n_paging(it_v_reg, PUD_INDEX_OFFSET) +
-        get_n_paging(it_v_reg, PD_INDEX_OFFSET);
+        get_n_paging(it_v_reg, GET_ULVL_PGSIZE_BITS(ULVL_FRM_ARM_PT_LVL(1))) +
+        get_n_paging(it_v_reg, GET_ULVL_PGSIZE_BITS(ULVL_FRM_ARM_PT_LVL(2)));
 }
 
 // BOOT_CODE cap_t create_it_address_space(cap_t root_cnode_cap, v_region_t it_v_reg)
