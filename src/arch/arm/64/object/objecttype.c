@@ -409,8 +409,7 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                    VMReadWrite,           /* capFVMRights */
                    !!deviceMemory         /* capFIsDevice */
                );
-#ifndef AARCH64_VSPACE_S2_START_L1
-    case seL4_ARM_PageGlobalDirectoryObject:
+	case seL4_ARM_VSpaceObject:
 #ifdef CONFIG_ARM_SMMU
 
         return cap_page_global_directory_cap_new(
@@ -427,22 +426,6 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                    0                      /* capPGDIsMapped     */
                );
 #endif /*!CONFIG_ARM_SMMU*/
-#endif /*!AARCH64_VSPACE_S2_START_L1*/
-    case seL4_ARM_PageUpperDirectoryObject:
-        return cap_page_upper_directory_cap_new(
-                   asidInvalid,           /* capPUDMappedASID    */
-                   (word_t)regionBase,    /* capPUDBasePtr       */
-                   0,                     /* capPUDIsMapped      */
-                   0                      /* capPUDMappedAddress */
-               );
-
-    case seL4_ARM_PageDirectoryObject:
-        return cap_page_directory_cap_new(
-                   asidInvalid,           /* capPDMappedASID    */
-                   (word_t)regionBase,    /* capPDBasePtr       */
-                   0,                     /* capPDIsMapped      */
-                   0                      /* capPDMappedAddress */
-               );
 
     case seL4_ARM_PageTableObject:
         return cap_page_table_cap_new(
