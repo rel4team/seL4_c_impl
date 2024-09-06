@@ -295,6 +295,7 @@ def init_arch_types(wordsize, args):
             CapType("seL4_ARM_SMC", wordsize),
             StructType("seL4_UserContext", wordsize * 36, wordsize),
             StructType("seL4_ARM_SMCContext", wordsize * 8, wordsize),
+            Type("seL4_VCPUReg", wordsize, wordsize),
         ] + arm_smmu,
 
         "arm_hyp": [
