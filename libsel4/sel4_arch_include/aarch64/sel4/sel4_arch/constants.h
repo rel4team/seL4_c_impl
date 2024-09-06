@@ -182,10 +182,6 @@ typedef enum {
 #define seL4_PageTableEntryBits 3
 #define seL4_PageTableIndexBits 9
 
-#define seL4_PageDirBits 12
-#define seL4_PageDirEntryBits 3
-#define seL4_PageDirIndexBits 9
-
 #define seL4_NumASIDPoolsBits 7
 #define seL4_ASIDPoolBits 12
 #define seL4_ASIDPoolIndexBits 9
