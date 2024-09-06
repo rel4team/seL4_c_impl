@@ -216,10 +216,8 @@ typedef enum {
 
 #ifndef __ASSEMBLER__
 SEL4_SIZE_SANITY(seL4_PageTableEntryBits, seL4_PageTableIndexBits, seL4_PageTableBits);
-SEL4_SIZE_SANITY(seL4_PageDirEntryBits, seL4_PageDirIndexBits, seL4_PageDirBits);
 SEL4_SIZE_SANITY(seL4_WordSizeBits, seL4_ASIDPoolIndexBits, seL4_ASIDPoolBits);
-SEL4_SIZE_SANITY(seL4_PGDEntryBits, seL4_PGDIndexBits, seL4_PGDBits);
-SEL4_SIZE_SANITY(seL4_PUDEntryBits, seL4_PUDIndexBits, seL4_PUDBits);
+SEL4_SIZE_SANITY(seL4_VSpaceEntryBits, seL4_VSpaceIndexBits, seL4_VSpaceBits);
 #endif
 
 #ifdef CONFIG_ENABLE_BENCHMARKS
