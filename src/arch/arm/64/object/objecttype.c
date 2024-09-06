@@ -357,7 +357,7 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
 	case seL4_ARM_VSpaceObject:
 #ifdef CONFIG_ARM_SMMU
 
-        return cap_page_global_directory_cap_new(
+        return cap_vspace_cap_new(
                    asidInvalid,           /* capPGDMappedASID   */
                    (word_t)regionBase,    /* capPGDBasePtr      */
                    0,                     /* capPGDIsMapped     */
@@ -365,7 +365,7 @@ cap_t Arch_createObject(object_t t, void *regionBase, word_t userSize, bool_t de
                );
 #else
 
-        return cap_page_global_directory_cap_new(
+        return cap_vspace_cap_new(
                    asidInvalid,           /* capPGDMappedASID   */
                    (word_t)regionBase,    /* capPGDBasePtr      */
                    0                      /* capPGDIsMapped     */

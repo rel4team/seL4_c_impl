@@ -25,7 +25,7 @@ compile_assert(SysReplyRecv_Minus2, SysReplyRecv == -2)
 
 /* Use macros to not break verification */
 #define endpoint_ptr_get_epQueue_tail_fp(ep_ptr) TCB_PTR(endpoint_ptr_get_epQueue_tail(ep_ptr))
-#define cap_vtable_cap_get_vspace_root_fp(vtable_cap) cap_vtable_root_get_basePtr(vtable_cap)
+#define cap_vtable_cap_get_vspace_root_fp(vtable_cap) VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(vtable_cap))
 
 static inline void FORCE_INLINE
 switchToThread_fp(tcb_t *thread, vspace_root_t *vroot, pde_t stored_hw_asid)

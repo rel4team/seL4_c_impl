@@ -260,7 +260,7 @@ BOOT_CODE void map_kernel_window(void)
     /* map the kernel window using large pages */
     vaddr = PPTR_BASE;
     for (paddr = PADDR_BASE; paddr < PADDR_TOP; paddr += BIT(seL4_LargePageBits)) {
-        armKSGlobalKernelPDs[GET_KPT_INDEX(vaddr, KLVL_FRM_ARM_PT_LVL(1))][GET_KPT_INDEX(vaddr, KLVL_FRM_ARM_PT_LVL(2))] = pte_pte_table_new(
+        armKSGlobalKernelPDs[GET_KPT_INDEX(vaddr, KLVL_FRM_ARM_PT_LVL(1))][GET_KPT_INDEX(vaddr, KLVL_FRM_ARM_PT_LVL(2))] = pte_pte_page_new(
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
                                                                               0, // XN
 #else
