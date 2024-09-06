@@ -279,22 +279,23 @@ def init_arch_types(wordsize, args):
             CapType("seL4_ARM_IOSpace", wordsize),
             CapType("seL4_ARM_IOPageTable", wordsize),
             StructType("seL4_UserContext", wordsize * 19, wordsize),
+            Type("seL4_VCPUReg", wordsize, wordsize),
         ] + arm_smmu,
 
         "aarch64": [
             Type("seL4_ARM_VMAttributes", wordsize, wordsize),
             CapType("seL4_ARM_Page", wordsize),
             CapType("seL4_ARM_PageTable", wordsize),
-            CapType("seL4_ARM_PageDirectory", wordsize),
-            CapType("seL4_ARM_PageUpperDirectory", wordsize),
-            CapType("seL4_ARM_PageGlobalDirectory", wordsize),
             CapType("seL4_ARM_VSpace", wordsize),
             CapType("seL4_ARM_ASIDControl", wordsize),
             CapType("seL4_ARM_ASIDPool", wordsize),
             CapType("seL4_ARM_VCPU", wordsize),
             CapType("seL4_ARM_IOSpace", wordsize),
             CapType("seL4_ARM_IOPageTable", wordsize),
+            CapType("seL4_ARM_SMC", wordsize),
             StructType("seL4_UserContext", wordsize * 36, wordsize),
+            StructType("seL4_ARM_SMCContext", wordsize * 8, wordsize),
+            Type("seL4_VCPUReg", wordsize, wordsize),
         ] + arm_smmu,
 
         "arm_hyp": [
@@ -308,6 +309,7 @@ def init_arch_types(wordsize, args):
             CapType("seL4_ARM_IOSpace", wordsize),
             CapType("seL4_ARM_IOPageTable", wordsize),
             StructType("seL4_UserContext", wordsize * 19, wordsize),
+            Type("seL4_VCPUReg", wordsize, wordsize),
         ] + arm_smmu,
 
         "ia32": [
@@ -348,6 +350,7 @@ def init_arch_types(wordsize, args):
             CapType("seL4_X86_EPTPDPT", wordsize),
             CapType("seL4_X86_EPTPD", wordsize),
             CapType("seL4_X86_EPTPT", wordsize),
+            # VCPU size needs to be configuration dependent.
             StructType("seL4_VCPUContext", wordsize * (15 if args.x86_vtx_64bit else 7), wordsize),
             StructType("seL4_UserContext", wordsize * 20, wordsize),
         ],
