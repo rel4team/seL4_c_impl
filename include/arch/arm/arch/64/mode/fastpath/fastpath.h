@@ -96,8 +96,8 @@ static inline void mdb_node_ptr_set_mdbPrev_np(mdb_node_t *node_ptr, word_t mdbP
 
 static inline bool_t isValidVTableRoot_fp(cap_t vspace_root_cap)
 {
-    return cap_capType_equals(vspace_root_cap, cap_vtable_root_cap)
-           && cap_vtable_root_isMapped(vspace_root_cap);
+    return cap_capType_equals(vspace_root_cap, cap_vspace_cap)
+           && cap_vspace_cap_get_capVSIsMapped(vspace_root_cap);
 }
 
 /* This is an accelerated check that msgLength, which appears

@@ -236,22 +236,22 @@ BOOT_CODE void map_kernel_window(void)
 
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     /* verify that the kernel window as at the second entry of the PGD */
-    assert(GET_PGD_INDEX(PPTR_BASE) == 1);
+    assert(GET_KPT_INDEX(PPTR_BASE, KLVL_FRM_ARM_PT_LVL(0)) == 1);
 #else
     /* verify that the kernel window as at the last entry of the PGD */
-    assert(GET_PGD_INDEX(PPTR_BASE) == BIT(PGD_INDEX_BITS) - 1);
+    assert(GET_KPT_INDEX(PPTR_BASE, KLVL_FRM_ARM_PT_LVL(0)) == BIT(PGD_INDEX_BITS) - 1);
 #endif
     assert(IS_ALIGNED(PPTR_BASE, seL4_LargePageBits));
     /* verify that the kernel device window is 1gb aligned and 1gb in size */
-    assert(GET_PUD_INDEX(PPTR_TOP) == BIT(PUD_INDEX_BITS) - 1);
+    assert(GET_KPT_INDEX(PPTR_TOP, KLVL_FRM_ARM_PT_LVL(1)) == BIT(PUD_INDEX_BITS) - 1);
     assert(IS_ALIGNED(PPTR_TOP, seL4_HugePageBits));
 
     /* place the PUD into the PGD */
-    armKSGlobalKernelPGD[GET_PGD_INDEX(PPTR_BASE)] = pgde_pgde_pud_new(
+    armKSGlobalKernelPGD[GET_KPT_INDEX(PPTR_BASE, KLVL_FRM_ARM_PT_LVL(0))] = pgde_pgde_pud_new(
                                                          addrFromKPPtr(armKSGlobalKernelPUD));
 
     /* place all PDs except the last one in PUD */
-    for (idx = GET_PUD_INDEX(PPTR_BASE); idx < GET_PUD_INDEX(PPTR_TOP); idx++) {
+    for (idx = GET_KPT_INDEX(PPTR_BASE, KLVL_FRM_ARM_PT_LVL(1)); idx < GET_KPT_INDEX(PPTR_TOP, KLVL_FRM_ARM_PT_LVL(1)); idx++) {
         armKSGlobalKernelPUD[idx] = pude_pude_pd_new(
                                         addrFromKPPtr(&armKSGlobalKernelPDs[idx][0])
                                     );
@@ -260,7 +260,7 @@ BOOT_CODE void map_kernel_window(void)
     /* map the kernel window using large pages */
     vaddr = PPTR_BASE;
     for (paddr = PADDR_BASE; paddr < PADDR_TOP; paddr += BIT(seL4_LargePageBits)) {
-        armKSGlobalKernelPDs[GET_PUD_INDEX(vaddr)][GET_PD_INDEX(vaddr)] = pde_pde_large_new(
+        armKSGlobalKernelPDs[GET_KPT_INDEX(vaddr, KLVL_FRM_ARM_PT_LVL(1))][GET_KPT_INDEX(vaddr, KLVL_FRM_ARM_PT_LVL(2))] = pde_pde_large_new(
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
                                                                               0, // XN
 #else
@@ -277,7 +277,7 @@ BOOT_CODE void map_kernel_window(void)
     }
 
     /* put the PD into the PUD for device window */
-    armKSGlobalKernelPUD[GET_PUD_INDEX(PPTR_TOP)] = pude_pude_pd_new(
+    armKSGlobalKernelPUD[GET_KPT_INDEX(PPTR_TOP, KLVL_FRM_ARM_PT_LVL(1))] = pude_pude_pd_new(
                                                         addrFromKPPtr(&armKSGlobalKernelPDs[BIT(PUD_INDEX_BITS) - 1][0])
                                                     );
 
