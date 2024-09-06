@@ -156,7 +156,7 @@ add_custom_command(
     OUTPUT include/interfaces/sel4_client.h
     COMMAND rm -f include/interfaces/sel4_client.h
     COMMAND
-        "${PYTHON3}" "${SYSCALL_STUB_GEN_PATH}" ${buffer} ${mcs} -a
+        "${PYTHON3}" "${SYSCALL_STUB_GEN_PATH}" ${buffer} ${64bitguests} ${mcs} -a
         "${KernelSel4Arch}" -o include/interfaces/sel4_client.h ${interface_xmls}
     DEPENDS "${SYSCALL_STUB_GEN_PATH}" ${interface_xmls}
     COMMENT "Generate sel4_client.h"
