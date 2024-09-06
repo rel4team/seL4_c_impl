@@ -24,7 +24,7 @@ static void cap_frame_print_attrs_pt(pte_t *ptSlot);
 static void cap_frame_print_attrs_impl(word_t SH, word_t AP, word_t NXN);
 static void cap_frame_print_attrs_vptr(word_t vptr, cap_t vspace);
 
-static void _cap_frame_print_attrs_vptr(word_t vptr, vspace_root_t *vspaceRoot);
+// static void _cap_frame_print_attrs_vptr(word_t vptr, vspace_root_t *vspaceRoot);
 
 static void arm64_obj_pt_print_slots(pte_t *pdSlot);
 static void arm64_obj_pd_print_slots(pte_t *pudSlot);
@@ -105,40 +105,40 @@ static void cap_frame_print_attrs_impl(word_t SH, word_t AP, word_t NXN)
 }
 
 /* use when only have access to vptr of frames */
-static void _cap_frame_print_attrs_vptr(word_t vptr, vspace_root_t *vspace)
-{
-    lookupPTSlot_ret_t ret = lookupPTSlot(vspace, vptr);
+// static void _cap_frame_print_attrs_vptr(word_t vptr, vspace_root_t *vspace)
+// {
+//     lookupPTSlot_ret_t ret = lookupPTSlot(vspace, vptr);
 
-    /* Check that the returned slot is a page. */
-    if (!pte_ptr_get_valid(ret.ptSlot) ||
-        (pte_pte_table_ptr_get_present(ret.ptSlot) && ret.ptBitsLeft > PAGE_BITS)) {
-        assert(0);
-    }
+//     /* Check that the returned slot is a page. */
+//     if (!pte_ptr_get_valid(ret.ptSlot) ||
+//         (pte_pte_table_ptr_get_present(ret.ptSlot) && ret.ptBitsLeft > PAGE_BITS)) {
+//         assert(0);
+//     }
 
-    word_t table_index;
-    switch (ret.ptBitsLeft) {
+//     word_t table_index;
+//     switch (ret.ptBitsLeft) {
 
-    case ARMHugePage:
-        table_index = GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(1));
-        break;
-    case ARMLargePage:
-        table_index = GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(2));
-        break;
-    case ARMSmallPage:
-        table_index = GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(3));
-        break;
-    default:
-        assert(0);
+//     case ARMHugePage:
+//         table_index = GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(1));
+//         break;
+//     case ARMLargePage:
+//         table_index = GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(2));
+//         break;
+//     case ARMSmallPage:
+//         table_index = GET_UPT_INDEX(vptr, ULVL_FRM_ARM_PT_LVL(3));
+//         break;
+//     default:
+//         assert(0);
 
-    }
-    printf("frame_%p_%04lu ", ret.ptSlot, table_index);
-    cap_frame_print_attrs_pt(ret.ptSlot);
-}
+//     }
+//     printf("frame_%p_%04lu ", ret.ptSlot, table_index);
+//     cap_frame_print_attrs_pt(ret.ptSlot);
+// }
 
-void cap_frame_print_attrs_vptr(word_t vptr, cap_t vspace)
-{
-    _cap_frame_print_attrs_vptr(vptr, VSPACE_PTR(pptr_of_cap(vspace)));
-}
+// void cap_frame_print_attrs_vptr(word_t vptr, cap_t vspace)
+// {
+//     _cap_frame_print_attrs_vptr(vptr, VSPACE_PTR(pptr_of_cap(vspace)));
+// }
 
 /*
  * print object slots
@@ -262,84 +262,84 @@ void print_ipc_buffer_slot(tcb_t *tcb)
 void print_cap_arch(cap_t cap)
 {
 
-    switch (cap_get_capType(cap)) {
-    case cap_page_table_cap: {
-        asid_t asid = cap_page_table_cap_get_capPTMappedASID(cap);
-        vptr_t vptr = cap_page_table_cap_get_capPTMappedAddress(cap);
-        pte_t *target_pt = PT_PTR(cap_page_table_cap_get_capPTBasePtr(cap));
+//     switch (cap_get_capType(cap)) {
+//     case cap_page_table_cap: {
+//         asid_t asid = cap_page_table_cap_get_capPTMappedASID(cap);
+//         vptr_t vptr = cap_page_table_cap_get_capPTMappedAddress(cap);
+//         pte_t *target_pt = PT_PTR(cap_page_table_cap_get_capPTBasePtr(cap));
 
-        findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
-        pte_t *ptSlot = NULL;
-        pte_t *pt = (pte_t *)find_ret.vspace_root;
-        word_t level;
-        for (level = 0; level < UPT_LEVELS - 1 && pt != target_pt; level++) {
-            ptSlot = pt + GET_UPT_INDEX(vptr, level);
-            if (unlikely(!pte_pte_table_ptr_get_present(ptSlot))) {
-                /* couldn't find it */
-                break;
-            }
-            pt = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(ptSlot));
-        }
-        if (pt != target_pt) {
-            /* didn't find it */
-            break;
-        }
+//         findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
+//         pte_t *ptSlot = NULL;
+//         pte_t *pt = (pte_t *)find_ret.vspace_root;
+//         word_t level;
+//         for (level = 0; level < UPT_LEVELS - 1 && pt != target_pt; level++) {
+//             ptSlot = pt + GET_UPT_INDEX(vptr, level);
+//             if (unlikely(!pte_pte_table_ptr_get_present(ptSlot))) {
+//                 /* couldn't find it */
+//                 break;
+//             }
+//             pt = paddr_to_pptr(pte_pte_table_ptr_get_pt_base_address(ptSlot));
+//         }
+//         if (pt != target_pt) {
+//             /* didn't find it */
+//             break;
+//         }
 
 
-        if (asid) {
-            printf("pt_%p_%04lu (asid: %lu)\n",
-                   target_pt, GET_UPT_INDEX(vptr, level), (long unsigned int)asid);
-        } else {
-            printf("pt_%p_%04lu\n", target_pt, GET_UPT_INDEX(vptr, level));
-        }
-        break;
-    }
-    case cap_vspace_cap: {
-        asid_t asid = cap_vspace_cap_get_capVSMappedASID(cap);
-        findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
-        if (asid) {
-            printf("%p_pd (asid: %lu)\n",
-                   find_ret.vspace_root, (long unsigned int)asid);
-        } else {
-            printf("%p_pd\n", find_ret.vspace_root);
-        }
-        break;
-    }
-    case cap_asid_control_cap: {
-        /* only one in the system */
-        printf("asid_control\n");
-        break;
-    }
-    case cap_frame_cap: {
-        vptr_t vptr = cap_frame_cap_get_capFMappedAddress(cap);
-        findVSpaceForASID_ret_t find_ret = findVSpaceForASID(cap_frame_cap_get_capFMappedASID(cap));
-        assert(find_ret.status == EXCEPTION_NONE);
-        _cap_frame_print_attrs_vptr(vptr, find_ret.vspace_root);
-        break;
-    }
-    case cap_asid_pool_cap: {
-        printf("%p_asid_pool\n", (void *)cap_asid_pool_cap_get_capASIDPool(cap));
-        break;
-    }
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-    case cap_vcpu_cap: {
-        printf("%p_vcpu\n", (void *)cap_vcpu_cap_get_capVCPUPtr(cap));
-        break;
-    }
-#endif
+//         if (asid) {
+//             printf("pt_%p_%04lu (asid: %lu)\n",
+//                    target_pt, GET_UPT_INDEX(vptr, level), (long unsigned int)asid);
+//         } else {
+//             printf("pt_%p_%04lu\n", target_pt, GET_UPT_INDEX(vptr, level));
+//         }
+//         break;
+//     }
+//     case cap_vspace_cap: {
+//         asid_t asid = cap_vspace_cap_get_capVSMappedASID(cap);
+//         findVSpaceForASID_ret_t find_ret = findVSpaceForASID(asid);
+//         if (asid) {
+//             printf("%p_pd (asid: %lu)\n",
+//                    find_ret.vspace_root, (long unsigned int)asid);
+//         } else {
+//             printf("%p_pd\n", find_ret.vspace_root);
+//         }
+//         break;
+//     }
+//     case cap_asid_control_cap: {
+//         /* only one in the system */
+//         printf("asid_control\n");
+//         break;
+//     }
+//     case cap_frame_cap: {
+//         vptr_t vptr = cap_frame_cap_get_capFMappedAddress(cap);
+//         findVSpaceForASID_ret_t find_ret = findVSpaceForASID(cap_frame_cap_get_capFMappedASID(cap));
+//         assert(find_ret.status == EXCEPTION_NONE);
+//         _cap_frame_print_attrs_vptr(vptr, find_ret.vspace_root);
+//         break;
+//     }
+//     case cap_asid_pool_cap: {
+//         printf("%p_asid_pool\n", (void *)cap_asid_pool_cap_get_capASIDPool(cap));
+//         break;
+//     }
+// #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+//     case cap_vcpu_cap: {
+//         printf("%p_vcpu\n", (void *)cap_vcpu_cap_get_capVCPUPtr(cap));
+//         break;
+//     }
+// #endif
 
-        /* ARM specific caps */
-#ifdef CONFIG_TK1_SMMU
-    case cap_io_space_cap: {
-        printf("%p_io_space\n", (void *)cap_io_space_cap_get_capModuleID(cap));
-        break;
-    }
-#endif
-    default: {
-        printf("[unknown cap %lu]\n", (long unsigned int)cap_get_capType(cap));
-        break;
-    }
-    }
+//         /* ARM specific caps */
+// #ifdef CONFIG_TK1_SMMU
+//     case cap_io_space_cap: {
+//         printf("%p_io_space\n", (void *)cap_io_space_cap_get_capModuleID(cap));
+//         break;
+//     }
+// #endif
+//     default: {
+//         printf("[unknown cap %lu]\n", (long unsigned int)cap_get_capType(cap));
+//         break;
+//     }
+//     }
 }
 
 void print_object_arch(cap_t cap)
