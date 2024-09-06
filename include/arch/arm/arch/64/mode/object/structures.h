@@ -128,7 +128,7 @@ static inline bool_t CONST cap_get_archCapIsPhysical(cap_t cap)
     case cap_page_table_cap:
         return true;
 
-    case case cap_vspace_cap:
+    case cap_vspace_cap:
         return true;
 
     case cap_asid_pool_cap:

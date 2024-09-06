@@ -32,36 +32,12 @@ deriveCap_ret_t Arch_deriveCap(cte_t *slot, cap_t cap)
     deriveCap_ret_t ret;
 
     switch (cap_get_capType(cap)) {
-    case cap_page_global_directory_cap:
-        if (cap_page_global_directory_cap_get_capPGDIsMapped(cap)) {
+    case cap_vspace_cap:
+        if (cap_vspace_cap_get_capVSIsMapped(cap)) {
             ret.cap = cap;
             ret.status = EXCEPTION_NONE;
         } else {
-            userError("Deriving a PDG cap without an assigned ASID");
-            current_syscall_error.type = seL4_IllegalOperation;
-            ret.cap = cap_null_cap_new();
-            ret.status = EXCEPTION_SYSCALL_ERROR;
-        }
-        return ret;
-
-    case cap_page_upper_directory_cap:
-        if (cap_page_upper_directory_cap_get_capPUDIsMapped(cap)) {
-            ret.cap = cap;
-            ret.status = EXCEPTION_NONE;
-        } else {
-            userError("Deriving a PUD cap without an assigned ASID");
-            current_syscall_error.type = seL4_IllegalOperation;
-            ret.cap = cap_null_cap_new();
-            ret.status = EXCEPTION_SYSCALL_ERROR;
-        }
-        return ret;
-
-    case cap_page_directory_cap:
-        if (cap_page_directory_cap_get_capPDIsMapped(cap)) {
-            ret.cap = cap;
-            ret.status = EXCEPTION_NONE;
-        } else {
-            userError("Deriving a PD cap without an assigned ASID");
+            userError("Deriving a VSpace cap without an assigned ASID");
             current_syscall_error.type = seL4_IllegalOperation;
             ret.cap = cap_null_cap_new();
             ret.status = EXCEPTION_SYSCALL_ERROR;
@@ -240,43 +216,10 @@ cap_t CONST Arch_maskCapRights(seL4_CapRights_t cap_rights_mask, cap_t cap)
 bool_t CONST Arch_sameRegionAs(cap_t cap_a, cap_t cap_b)
 {
     switch (cap_get_capType(cap_a)) {
-    case cap_frame_cap:
-        if (cap_get_capType(cap_b) == cap_frame_cap) {
-
-            word_t botA, botB, topA, topB;
-            botA = cap_frame_cap_get_capFBasePtr(cap_a);
-            botB = cap_frame_cap_get_capFBasePtr(cap_b);
-            topA = botA + MASK(pageBitsForSize(cap_frame_cap_get_capFSize(cap_a)));
-            topB = botB + MASK(pageBitsForSize(cap_frame_cap_get_capFSize(cap_b))) ;
-            return ((botA <= botB) && (topA >= topB) && (botB <= topB));
-        }
-        break;
-
-    case cap_page_table_cap:
-        if (cap_get_capType(cap_b) == cap_page_table_cap) {
-            return cap_page_table_cap_get_capPTBasePtr(cap_a) ==
-                   cap_page_table_cap_get_capPTBasePtr(cap_b);
-        }
-        break;
-
-    case cap_page_directory_cap:
-        if (cap_get_capType(cap_b) == cap_page_directory_cap) {
-            return cap_page_directory_cap_get_capPDBasePtr(cap_a) ==
-                   cap_page_directory_cap_get_capPDBasePtr(cap_b);
-        }
-        break;
-
-    case cap_page_upper_directory_cap:
-        if (cap_get_capType(cap_b) == cap_page_upper_directory_cap) {
-            return cap_page_upper_directory_cap_get_capPUDBasePtr(cap_a) ==
-                   cap_page_upper_directory_cap_get_capPUDBasePtr(cap_b);
-        }
-        break;
-
-    case cap_page_global_directory_cap:
-        if (cap_get_capType(cap_b) == cap_page_global_directory_cap) {
-            return cap_page_global_directory_cap_get_capPGDBasePtr(cap_a) ==
-                   cap_page_global_directory_cap_get_capPGDBasePtr(cap_b);
+    case cap_vspace_cap:
+        if (cap_get_capType(cap_b) == cap_vspace_cap) {
+            return cap_vspace_cap_get_capVSBasePtr(cap_a) ==
+                   cap_vspace_cap_get_capVSBasePtr(cap_b);
         }
         break;
 
@@ -367,6 +310,8 @@ word_t Arch_getObjectSize(word_t t)
         return ARMHugePageBits;
     case seL4_ARM_PageTableObject:
         return seL4_PageTableBits;
+	case seL4_ARM_VSpaceObject:
+        return seL4_VSpaceBits;
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     case seL4_ARM_VCPUObject:
         return VCPU_SIZE_BITS;
