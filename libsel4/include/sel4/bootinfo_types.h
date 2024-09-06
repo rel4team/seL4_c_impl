@@ -76,6 +76,17 @@ typedef struct seL4_BootInfo {
      * to make this struct easier to represent in other languages */
 } seL4_BootInfo;
 
+/* The boot info frame must be large enough to hold the seL4_BootInfo data
+ * structure. Due to internal restrictions, the size must be of the form 2^n and
+ * the minimum is one page.
+ */
+#define seL4_BootInfoFrameBits  seL4_PageBits
+#define seL4_BootInfoFrameSize  LIBSEL4_BIT(seL4_BootInfoFrameBits)
+
+SEL4_COMPILE_ASSERT(
+    invalid_seL4_BootInfoFrameSize,
+    sizeof(seL4_BootInfo) <= seL4_BootInfoFrameSize)
+
 /* If extraLen > 0, then 4K after the start of bootinfo there is a region of the
  * size extraLen that contains additional boot info data chunks. They are
  * arch/platform specific and may or may not exist in any given execution. Each
