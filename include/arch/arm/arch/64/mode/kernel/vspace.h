@@ -43,21 +43,21 @@ static const region_t BOOT_RODATA *mode_reserved_region = NULL;
 static inline exception_t performASIDPoolInvocation(asid_t asid, asid_pool_t *poolPtr, cte_t *cte)
 {
 	//TODO
-    cap_t cap = vspaceCapSlot->cap;
-    asid_map_t asid_map = asid_map_asid_map_vspace_new(
-#ifdef CONFIG_ARM_SMMU
-                              /* bind_cb: Number of bound context banks */
-                              0,
-#endif
-                              /* vspace_root: reference to vspace root page table object */
-                            //   cap_page_global_directory_cap_get_capPGDBasePtr(cte->cap)
-#ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
-                              /* stored_hw_vmid, stored_vmid_valid: Assigned hardware VMID for TLB. */
-                              , 0, false
-#endif
-                          );
+//     cap_t cap = vspaceCapSlot->cap;
+//     asid_map_t asid_map = asid_map_asid_map_vspace_new(
+// #ifdef CONFIG_ARM_SMMU
+//                               /* bind_cb: Number of bound context banks */
+//                               0,
+// #endif
+//                               /* vspace_root: reference to vspace root page table object */
+//                             //   cap_page_global_directory_cap_get_capPGDBasePtr(cte->cap)
+// #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
+//                               /* stored_hw_vmid, stored_vmid_valid: Assigned hardware VMID for TLB. */
+//                               , 0, false
+// #endif
+//                           );
 
-    poolPtr->array[asid & MASK(asidLowBits)] = asid_map;
+//     poolPtr->array[asid & MASK(asidLowBits)] = asid_map;
 
     return EXCEPTION_NONE;
 }

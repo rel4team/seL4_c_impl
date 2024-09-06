@@ -128,13 +128,7 @@ static inline bool_t CONST cap_get_archCapIsPhysical(cap_t cap)
     case cap_page_table_cap:
         return true;
 
-    case cap_page_directory_cap:
-        return true;
-
-    case cap_page_upper_directory_cap:
-        return true;
-
-    case cap_page_global_directory_cap:
+    case case cap_vspace_cap:
         return true;
 
     case cap_asid_pool_cap:
@@ -165,16 +159,10 @@ static inline void *CONST cap_get_archCapPtr(cap_t cap)
         return (void *)(cap_frame_cap_get_capFBasePtr(cap));
 
     case cap_page_table_cap:
-        return PD_PTR(cap_page_table_cap_get_capPTBasePtr(cap));
+        return PT_PTR(cap_page_table_cap_get_capPTBasePtr(cap));
 
-    case cap_page_directory_cap:
-        return PT_PTR(cap_page_directory_cap_get_capPDBasePtr(cap));
-
-    case cap_page_upper_directory_cap:
-        return PUD_PTR(cap_page_upper_directory_cap_get_capPUDBasePtr(cap));
-
-    case cap_page_global_directory_cap:
-        return PGD_PTR(cap_page_global_directory_cap_get_capPGDBasePtr(cap));
+	case cap_vspace_cap:
+        return VSPACE_PTR(cap_vspace_cap_get_capVSBasePtr(cap));
 
     case cap_asid_control_cap:
         return NULL;
@@ -192,61 +180,41 @@ static inline void *CONST cap_get_archCapPtr(cap_t cap)
         return NULL;
     }
 }
-
-static inline bool_t pgde_pgde_pud_ptr_get_present(pgde_t *pgd)
+static inline bool_t pte_pte_page_ptr_get_present(pte_t *pt)
 {
-    return (pgde_ptr_get_pgde_type(pgd) == pgde_pgde_pud);
+	return (pte_ptr_get_pte_type(pt) == pte_pte_page);
 }
 
-static inline bool_t pude_pude_pd_ptr_get_present(pude_t *pud)
+static inline bool_t pte_pte_table_ptr_get_present(pte_t *pt)
 {
-    return (pude_ptr_get_pude_type(pud) == pude_pude_pd);
+	return (pte_ptr_get_pte_type(pt) == pte_pte_table);
 }
 
-static inline bool_t pude_pude_1g_ptr_get_present(pude_t *pud)
+static inline bool_t pte_4k_page_ptr_get_present(pte_t *pt)
 {
-    return (pude_ptr_get_pude_type(pud) == pude_pude_1g);
+	return (pte_ptr_get_pte_type(pt) == pte_pte_4k_page);
 }
 
-static inline pude_t pude_invalid_new(void)
+static inline bool_t pte_ptr_get_valid(pte_t *pt)
 {
-    return (pude_t) {
-        {
-            0
-        }
-    };
+	return (pte_ptr_get_pte_type(pt) != pte_pte_invalid);
 }
 
-static inline bool_t pde_pde_small_ptr_get_present(pde_t *pd)
+static inline bool_t pte_is_page_type(pte_t pte)
 {
-    return (pde_ptr_get_pde_type(pd) == pde_pde_small);
+	return pte_get_pte_type(pte) == pte_pte_4k_page ||
+		pte_get_pte_type(pte) == pte_pte_page;
 }
 
-static inline bool_t pde_pde_large_ptr_get_present(pde_t *pd)
+/** Return base address for both of pte_4k_page and pte_page */
+static inline uint64_t pte_get_page_base_address(pte_t pte)
 {
-    return (pde_ptr_get_pde_type(pd) == pde_pde_large);
+	assert(pte_is_page_type(pte));
+	return pte.words[0] & 0xfffffffff000ull;
 }
 
-static inline pde_t pde_invalid_new(void)
+/** Return base address for both of pte_4k_page and pte_page */
+static inline uint64_t pte_page_ptr_get_page_base_address(pte_t *pt)
 {
-    return (pde_t) {
-        {
-            0
-        }
-    };
+	return pte_get_page_base_address(*pt);
 }
-
-static inline bool_t pte_ptr_get_present(pte_t *pt)
-{
-    return (pte_ptr_get_reserved(pt) == 0x3);
-}
-
-static inline pte_t pte_invalid_new(void)
-{
-    return (pte_t) {
-        {
-            0
-        }
-    };
-}
-
