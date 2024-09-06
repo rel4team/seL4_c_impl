@@ -22,7 +22,7 @@ word_t get_tcb_sp(tcb_t *tcb)
 static void obj_frame_print_attrs(vm_page_size_t frameSize, paddr_t frameBase);
 static void cap_frame_print_attrs_pt(pte_t *ptSlot);
 static void cap_frame_print_attrs_impl(word_t SH, word_t AP, word_t NXN);
-static void cap_frame_print_attrs_vptr(word_t vptr, cap_t vspace);
+// static void cap_frame_print_attrs_vptr(word_t vptr, cap_t vspace);
 
 // static void _cap_frame_print_attrs_vptr(word_t vptr, vspace_root_t *vspaceRoot);
 
