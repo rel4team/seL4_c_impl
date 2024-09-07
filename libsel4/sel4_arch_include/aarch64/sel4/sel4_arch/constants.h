@@ -60,6 +60,7 @@ typedef enum {
 
 typedef enum {
     seL4_VPPIEvent_IRQ,
+    seL4_VPPIEvent_Length,
     SEL4_FORCE_LONG_ENUM(seL4_VPPIEvent_Msg),
 } seL4_VPPIEvent_Msg;
 
@@ -110,7 +111,7 @@ typedef enum {
     seL4_VCPUReg_CNTKCTL_EL1,
 
     seL4_VCPUReg_Num,
-	SEL4_FORCE_LONG_ENUM(seL4_VCPUReg),
+    SEL4_FORCE_LONG_ENUM(seL4_VCPUReg),
 } seL4_VCPUReg;
 
 #ifdef CONFIG_KERNEL_MCS
@@ -158,7 +159,7 @@ typedef enum {
     seL4_Timeout_Consumed,
     seL4_Timeout_Length,
     SEL4_FORCE_LONG_ENUM(seL4_Timeout_Msg)
-} seL4_TimeoutMsg;
+} seL4_Timeout_Msg;
 #endif
 #endif /* !__ASSEMBLER__ */
 
@@ -188,7 +189,6 @@ typedef enum {
 #define seL4_IOPageTableBits 12
 #define seL4_WordSizeBits 3
 
-#define seL4_PUDEntryBits 3
 #define seL4_VSpaceEntryBits 3
 
 #if defined(CONFIG_ARM_HYPERVISOR_SUPPORT) && defined (CONFIG_ARM_PA_SIZE_BITS_40)

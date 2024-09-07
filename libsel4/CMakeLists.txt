@@ -147,7 +147,7 @@ add_custom_command(
 
 set(
     interface_xmls
-	"${CMAKE_CURRENT_SOURCE_DIR}/sel4_arch_include/${KernelSel4Arch}/interfaces/object-api-sel4-arch.xml"
+    "${CMAKE_CURRENT_SOURCE_DIR}/sel4_arch_include/${KernelSel4Arch}/interfaces/object-api-sel4-arch.xml"
     "${CMAKE_CURRENT_SOURCE_DIR}/arch_include/${KernelArch}/interfaces/object-api-arch.xml"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/interfaces/object-api.xml"
 )
