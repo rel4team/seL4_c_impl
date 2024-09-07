@@ -260,7 +260,7 @@ def init_data_types(wordsize):
     return types
 
 
-def init_arch_types(wordsize):
+def init_arch_types(wordsize, args):
     arm_smmu = [
         CapType("seL4_ARM_SIDControl", wordsize),
         CapType("seL4_ARM_SID", wordsize),
@@ -279,22 +279,23 @@ def init_arch_types(wordsize):
             CapType("seL4_ARM_IOSpace", wordsize),
             CapType("seL4_ARM_IOPageTable", wordsize),
             StructType("seL4_UserContext", wordsize * 19, wordsize),
+            Type("seL4_VCPUReg", wordsize, wordsize),
         ] + arm_smmu,
 
         "aarch64": [
             Type("seL4_ARM_VMAttributes", wordsize, wordsize),
             CapType("seL4_ARM_Page", wordsize),
             CapType("seL4_ARM_PageTable", wordsize),
-            CapType("seL4_ARM_PageDirectory", wordsize),
-            CapType("seL4_ARM_PageUpperDirectory", wordsize),
-            CapType("seL4_ARM_PageGlobalDirectory", wordsize),
             CapType("seL4_ARM_VSpace", wordsize),
             CapType("seL4_ARM_ASIDControl", wordsize),
             CapType("seL4_ARM_ASIDPool", wordsize),
             CapType("seL4_ARM_VCPU", wordsize),
             CapType("seL4_ARM_IOSpace", wordsize),
             CapType("seL4_ARM_IOPageTable", wordsize),
+            CapType("seL4_ARM_SMC", wordsize),
             StructType("seL4_UserContext", wordsize * 36, wordsize),
+            StructType("seL4_ARM_SMCContext", wordsize * 8, wordsize),
+            Type("seL4_VCPUReg", wordsize, wordsize),
         ] + arm_smmu,
 
         "arm_hyp": [
@@ -308,6 +309,7 @@ def init_arch_types(wordsize):
             CapType("seL4_ARM_IOSpace", wordsize),
             CapType("seL4_ARM_IOPageTable", wordsize),
             StructType("seL4_UserContext", wordsize * 19, wordsize),
+            Type("seL4_VCPUReg", wordsize, wordsize),
         ] + arm_smmu,
 
         "ia32": [
@@ -348,7 +350,8 @@ def init_arch_types(wordsize):
             CapType("seL4_X86_EPTPDPT", wordsize),
             CapType("seL4_X86_EPTPD", wordsize),
             CapType("seL4_X86_EPTPT", wordsize),
-            StructType("seL4_VCPUContext", wordsize * 7, wordsize),
+            # VCPU size needs to be configuration dependent.
+            StructType("seL4_VCPUContext", wordsize * (15 if args.x86_vtx_64bit else 7), wordsize),
             StructType("seL4_UserContext", wordsize * 20, wordsize),
         ],
         "riscv32": [
@@ -954,7 +957,7 @@ def parse_xml_file(input_file, valid_types):
     return (methods, structs, api)
 
 
-def generate_stub_file(arch, wordsize, input_files, output_file, use_only_ipc_buffer, mcs):
+def generate_stub_file(arch, input_files, output_file, use_only_ipc_buffer, mcs, args):
     """
     Generate a header file containing system call stubs for seL4.
     """
@@ -964,8 +967,9 @@ def generate_stub_file(arch, wordsize, input_files, output_file, use_only_ipc_bu
     if arch not in WORD_SIZE_BITS_ARCH.keys():
         raise Exception("Invalid architecture.")
 
+    wordsize = WORD_SIZE_BITS_ARCH[arch]
     data_types = init_data_types(wordsize)
-    arch_types = init_arch_types(wordsize)
+    arch_types = init_arch_types(wordsize, args)
 
     # Parse XML
     methods = []
@@ -1059,12 +1063,9 @@ def process_args():
     parser.add_argument("--mcs", dest="mcs", action="store_true",
                         help="Generate MCS api.")
 
-    wsizegroup = parser.add_mutually_exclusive_group()
-    wsizegroup.add_argument("-w", "--word-size", dest="wsize",
-                            help="Word size(in bits), for the platform.")
-    wsizegroup.add_argument("-c", "--cfile", dest="cfile",
-                            help="Config file for Kbuild, used to get Word size.")
-
+    parser.add_argument("--x86-vtx-64-bit-guests", dest="x86_vtx_64bit", action="store_true", default=False,
+                        help="Whether the vtx VCPU objects need to be large enough for 64-bit guests.")
+    
     parser.add_argument("files", metavar="FILES", nargs="+",
                         help="Input XML files.")
 
@@ -1072,35 +1073,10 @@ def process_args():
 
 
 def main():
-
     parser = process_args()
     args = parser.parse_args()
-
-    if not (args.wsize or args.cfile):
-        parser.error("Require either -w/--word-size or -c/--cfile argument.")
-        sys.exit(2)
-
-    # Get word size
-    wordsize = -1
-
-    if args.cfile:
-        try:
-            with open(args.cfile) as conffile:
-                for line in conffile:
-                    if line.startswith('CONFIG_WORD_SIZE'):
-                        wordsize = int(line.split('=')[1].strip())
-        except IndexError:
-            print("Invalid word size in configuration file.")
-            sys.exit(2)
-    else:
-        wordsize = int(args.wsize)
-
-    if wordsize == -1:
-        print("Invalid word size.")
-        sys.exit(2)
-
     # Generate the stubs.
-    generate_stub_file(args.arch, wordsize, args.files, args.output, args.buffer, args.mcs)
+    generate_stub_file(args.arch, args.files, args.output, args.buffer, args.mcs, args)
 
 
 if __name__ == "__main__":

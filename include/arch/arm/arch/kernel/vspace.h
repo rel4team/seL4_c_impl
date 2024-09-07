@@ -31,7 +31,6 @@ extern char arm_vector_table[1];
 
 word_t *PURE lookupIPCBuffer(bool_t isReceiver, tcb_t *thread);
 exception_t handleVMFault(tcb_t *thread, vm_fault_type_t vm_faultType);
-pde_t *pageTableMapped(asid_t asid, vptr_t vaddr, pte_t *pt);
 void setVMRoot(tcb_t *tcb);
 bool_t CONST isValidVTableRoot(cap_t cap);
 exception_t checkValidIPCBuffer(vptr_t vptr, cap_t cap);
@@ -46,48 +45,3 @@ exception_t decodeARMMMUInvocation(word_t invLabel, word_t length, cptr_t cptr,
 void Arch_userStackTrace(tcb_t *tptr);
 #endif
 
-// MiDev Modifications
-
-
-struct lookupPGDSlot_ret {
-    exception_t status;
-    pgde_t *pgdSlot;
-};
-typedef struct lookupPGDSlot_ret lookupPGDSlot_ret_t;
-
-struct lookupPUDSlot_ret {
-    exception_t status;
-    pude_t *pudSlot;
-};
-typedef struct lookupPUDSlot_ret lookupPUDSlot_ret_t;
-
-struct lookupPDSlot_ret {
-    exception_t status;
-    pde_t *pdSlot;
-};
-typedef struct lookupPDSlot_ret lookupPDSlot_ret_t;
-
-struct lookupPTSlot_ret {
-    exception_t status;
-    pte_t *ptSlot;
-};
-typedef struct lookupPTSlot_ret lookupPTSlot_ret_t;
-
-struct lookupFrame_ret {
-    paddr_t frameBase;
-    vm_page_size_t frameSize;
-    bool_t valid;
-};
-typedef struct lookupFrame_ret lookupFrame_ret_t;
-
-struct findVSpaceForASID_ret {
-    exception_t status;
-    vspace_root_t *vspace_root;
-};
-typedef struct findVSpaceForASID_ret findVSpaceForASID_ret_t;
-
-void map_it_frame_cap(cap_t vspace_cap, cap_t frame_cap, bool_t executable);
-lookupPUDSlot_ret_t lookupPUDSlot(vspace_root_t *vspace, vptr_t vptr);
-lookupPGDSlot_ret_t lookupPGDSlot(vspace_root_t *vspace, vptr_t vptr);
-findVSpaceForASID_ret_t findVSpaceForASID(asid_t asid);
-lookupPDSlot_ret_t lookupPDSlot(vspace_root_t *vspace, vptr_t vptr);

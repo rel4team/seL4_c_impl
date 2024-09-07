@@ -10,7 +10,7 @@
 #include <sel4/macros.h>
 
 /* caps with fixed slot positions in the root CNode */
-enum {
+enum seL4_RootCNodeCapSlots {
     seL4_CapNull                =  0, /* null cap */
     seL4_CapInitThreadTCB       =  1, /* initial thread's TCB cap */
     seL4_CapInitThreadCNode     =  2, /* initial thread's root CNode cap */
@@ -23,14 +23,11 @@ enum {
     seL4_CapBootInfoFrame       =  9, /* bootinfo frame cap */
     seL4_CapInitThreadIPCBuffer = 10, /* initial thread's IPC buffer frame cap */
     seL4_CapDomain              = 11, /* global domain controller cap */
-    seL4_CapSMMUSIDControl      = 12,  /*global SMMU SID controller cap, null cap if not supported*/
-    seL4_CapSMMUCBControl       = 13,  /*global SMMU CB controller cap, null cap if not supported*/
-#ifdef CONFIG_KERNEL_MCS
-    seL4_CapInitThreadSC        = 14, /* initial thread's scheduling context cap */
-    seL4_NumInitialCaps         = 15
-#else
-    seL4_NumInitialCaps         = 14
-#endif /* !CONFIG_KERNEL_MCS */
+    seL4_CapSMMUSIDControl      = 12, /* global SMMU SID controller cap, null cap if not supported */
+    seL4_CapSMMUCBControl       = 13, /* global SMMU CB controller cap, null cap if not supported */
+    seL4_CapInitThreadSC        = 14, /* initial thread's scheduling context cap, null cap if not supported */
+    seL4_CapSMC                 = 15, /* global SMC cap, null cap if not supported */
+    seL4_NumInitialCaps         = 16
 };
 
 /* Legacy code will have assumptions on the vspace root being a Page Directory
@@ -78,6 +75,17 @@ typedef struct seL4_BootInfo {
     /* the untypedList should be the last entry in this struct, in order
      * to make this struct easier to represent in other languages */
 } seL4_BootInfo;
+
+/* The boot info frame must be large enough to hold the seL4_BootInfo data
+ * structure. Due to internal restrictions, the size must be of the form 2^n and
+ * the minimum is one page.
+ */
+#define seL4_BootInfoFrameBits  seL4_PageBits
+#define seL4_BootInfoFrameSize  LIBSEL4_BIT(seL4_BootInfoFrameBits)
+
+SEL4_COMPILE_ASSERT(
+    invalid_seL4_BootInfoFrameSize,
+    sizeof(seL4_BootInfo) <= seL4_BootInfoFrameSize)
 
 /* If extraLen > 0, then 4K after the start of bootinfo there is a region of the
  * size extraLen that contains additional boot info data chunks. They are
