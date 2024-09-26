@@ -149,14 +149,6 @@ static word_t CONST APFromVMRights(vm_rights_t vm_rights)
             return 1;
         }
 
-    case VMKernelReadOnly:
-        if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
-            /* no corresponding AP for S2AP, return None */
-            return 0;
-        } else {
-            return 2;
-        }
-
     case VMReadOnly:
         if (config_set(CONFIG_ARM_HYPERVISOR_SUPPORT)) {
             return 1;
@@ -244,23 +236,23 @@ BOOT_CODE void map_kernel_window(void)
 
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
     /* verify that the kernel window as at the second entry of the PGD */
-    assert(GET_PGD_INDEX(PPTR_BASE) == 1);
+    assert(GET_KPT_INDEX(PPTR_BASE, KLVL_FRM_ARM_PT_LVL(0)) == 1);
 #else
     /* verify that the kernel window as at the last entry of the PGD */
-    assert(GET_PGD_INDEX(PPTR_BASE) == BIT(PGD_INDEX_BITS) - 1);
+    assert(GET_KPT_INDEX(PPTR_BASE, KLVL_FRM_ARM_PT_LVL(0)) == BIT(PT_INDEX_BITS) - 1);
 #endif
     assert(IS_ALIGNED(PPTR_BASE, seL4_LargePageBits));
     /* verify that the kernel device window is 1gb aligned and 1gb in size */
-    assert(GET_PUD_INDEX(PPTR_TOP) == BIT(PUD_INDEX_BITS) - 1);
+    assert(GET_KPT_INDEX(PPTR_TOP, KLVL_FRM_ARM_PT_LVL(1)) == BIT(PT_INDEX_BITS) - 1);
     assert(IS_ALIGNED(PPTR_TOP, seL4_HugePageBits));
 
     /* place the PUD into the PGD */
-    armKSGlobalKernelPGD[GET_PGD_INDEX(PPTR_BASE)] = pgde_pgde_pud_new(
+    armKSGlobalKernelPGD[GET_KPT_INDEX(PPTR_BASE, KLVL_FRM_ARM_PT_LVL(0))] = pte_pte_table_new(
                                                          addrFromKPPtr(armKSGlobalKernelPUD));
 
     /* place all PDs except the last one in PUD */
-    for (idx = GET_PUD_INDEX(PPTR_BASE); idx < GET_PUD_INDEX(PPTR_TOP); idx++) {
-        armKSGlobalKernelPUD[idx] = pude_pude_pd_new(
+    for (idx = GET_KPT_INDEX(PPTR_BASE, KLVL_FRM_ARM_PT_LVL(1)); idx < GET_KPT_INDEX(PPTR_TOP, KLVL_FRM_ARM_PT_LVL(1)); idx++) {
+        armKSGlobalKernelPUD[idx] = pte_pte_table_new(
                                         addrFromKPPtr(&armKSGlobalKernelPDs[idx][0])
                                     );
     }
@@ -268,7 +260,7 @@ BOOT_CODE void map_kernel_window(void)
     /* map the kernel window using large pages */
     vaddr = PPTR_BASE;
     for (paddr = PADDR_BASE; paddr < PADDR_TOP; paddr += BIT(seL4_LargePageBits)) {
-        armKSGlobalKernelPDs[GET_PUD_INDEX(vaddr)][GET_PD_INDEX(vaddr)] = pde_pde_large_new(
+        armKSGlobalKernelPDs[GET_KPT_INDEX(vaddr, KLVL_FRM_ARM_PT_LVL(1))][GET_KPT_INDEX(vaddr, KLVL_FRM_ARM_PT_LVL(2))] = pte_pte_page_new(
 #ifdef CONFIG_ARM_HYPERVISOR_SUPPORT
                                                                               0, // XN
 #else
@@ -285,12 +277,12 @@ BOOT_CODE void map_kernel_window(void)
     }
 
     /* put the PD into the PUD for device window */
-    armKSGlobalKernelPUD[GET_PUD_INDEX(PPTR_TOP)] = pude_pude_pd_new(
-                                                        addrFromKPPtr(&armKSGlobalKernelPDs[BIT(PUD_INDEX_BITS) - 1][0])
+    armKSGlobalKernelPUD[GET_KPT_INDEX(PPTR_TOP, KLVL_FRM_ARM_PT_LVL(1))] = pte_pte_table_new(
+                                                        addrFromKPPtr(&armKSGlobalKernelPDs[BIT(PT_INDEX_BITS) - 1][0])
                                                     );
 
     /* put the PT into the PD for device window */
-    armKSGlobalKernelPDs[BIT(PUD_INDEX_BITS) - 1][BIT(PD_INDEX_BITS) - 1] = pde_pde_small_new(
+    armKSGlobalKernelPDs[BIT(PT_INDEX_BITS) - 1][BIT(PT_INDEX_BITS) - 1] = pte_pte_table_new(
                                                                                 addrFromKPPtr(armKSGlobalKernelPT)
                                                                             );
 
@@ -468,10 +460,10 @@ BOOT_CODE word_t arch_get_n_paging(v_region_t it_v_reg)
 {
     return
 #ifndef AARCH64_VSPACE_S2_START_L1
-        get_n_paging(it_v_reg, PGD_INDEX_OFFSET) +
+        get_n_paging(it_v_reg, GET_ULVL_PGSIZE_BITS(ULVL_FRM_ARM_PT_LVL(0))) +
 #endif
-        get_n_paging(it_v_reg, PUD_INDEX_OFFSET) +
-        get_n_paging(it_v_reg, PD_INDEX_OFFSET);
+        get_n_paging(it_v_reg, GET_ULVL_PGSIZE_BITS(ULVL_FRM_ARM_PT_LVL(1))) +
+        get_n_paging(it_v_reg, GET_ULVL_PGSIZE_BITS(ULVL_FRM_ARM_PT_LVL(2)));
 }
 
 // BOOT_CODE cap_t create_it_address_space(cap_t root_cnode_cap, v_region_t it_v_reg)
@@ -982,7 +974,7 @@ exception_t checkValidIPCBuffer(vptr_t vptr, cap_t cap)
 
 bool_t CONST isVTableRoot(cap_t cap)
 {
-    return cap_get_capType(cap) == cap_vtable_root_cap;
+    return cap_get_capType(cap) == cap_vspace_cap;
 }
 
 // bool_t CONST isValidNativeRoot(cap_t cap)
