@@ -17,14 +17,13 @@
 #include <hardware.h>
 #include <util.h>
 
-/* (node-local) state accessed only during bootstrapping */
+ /* (node-local) state accessed only during bootstrapping */
 extern BOOT_BSS ndks_boot_t ndks_boot;
 
 extern BOOT_BSS rootserver_mem_t rootserver;
 extern BOOT_BSS region_t rootserver_mem;
 
-BOOT_CODE static void merge_regions(void)
-{
+BOOT_CODE static void merge_regions(void) {
     /* Walk through reserved regions and see if any can be merged */
     for (word_t i = 1; i < ndks_boot.resv_count;) {
         if (ndks_boot.reserved[i - 1].end == ndks_boot.reserved[i].start) {
@@ -43,8 +42,7 @@ BOOT_CODE static void merge_regions(void)
     }
 }
 
-BOOT_CODE bool_t reserve_region(p_region_t reg)
-{
+BOOT_CODE bool_t reserve_region(p_region_t reg) {
     word_t i;
     assert(reg.start <= reg.end);
     if (reg.start == reg.end) {
@@ -69,8 +67,8 @@ BOOT_CODE bool_t reserve_region(p_region_t reg)
             /* move regions down, making sure there's enough room */
             if (ndks_boot.resv_count + 1 >= MAX_NUM_RESV_REG) {
                 printf("Can't mark region 0x%"SEL4_PRIx_word"-0x%"SEL4_PRIx_word
-                       " as reserved, try increasing MAX_NUM_RESV_REG (currently %d)\n",
-                       reg.start, reg.end, (int)MAX_NUM_RESV_REG);
+                    " as reserved, try increasing MAX_NUM_RESV_REG (currently %d)\n",
+                    reg.start, reg.end, (int)MAX_NUM_RESV_REG);
                 return false;
             }
             for (word_t j = ndks_boot.resv_count; j > i; j--) {
@@ -85,8 +83,8 @@ BOOT_CODE bool_t reserve_region(p_region_t reg)
 
     if (i + 1 == MAX_NUM_RESV_REG) {
         printf("Can't mark region 0x%"SEL4_PRIx_word"-0x%"SEL4_PRIx_word
-               " as reserved, try increasing MAX_NUM_RESV_REG (currently %d)\n",
-               reg.start, reg.end, (int)MAX_NUM_RESV_REG);
+            " as reserved, try increasing MAX_NUM_RESV_REG (currently %d)\n",
+            reg.start, reg.end, (int)MAX_NUM_RESV_REG);
         return false;
     }
 
@@ -96,8 +94,7 @@ BOOT_CODE bool_t reserve_region(p_region_t reg)
     return true;
 }
 
-BOOT_CODE static bool_t insert_region(region_t reg)
-{
+BOOT_CODE static bool_t insert_region(region_t reg) {
     assert(reg.start <= reg.end);
     if (is_reg_empty(reg)) {
         return true;
@@ -121,8 +118,8 @@ BOOT_CODE static bool_t insert_region(region_t reg)
      * decide how bad this is.
      */
     printf("no free memory slot left for [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"],"
-           " consider increasing MAX_NUM_FREEMEM_REG (%u)\n",
-           reg.start, reg.end, (unsigned int)MAX_NUM_FREEMEM_REG);
+        " consider increasing MAX_NUM_FREEMEM_REG (%u)\n",
+        reg.start, reg.end, (unsigned int)MAX_NUM_FREEMEM_REG);
 
     /* For debug builds we consider this a fatal error. Rationale is, that the
      * caller does not check the error code at the moment, but just ignores any
@@ -132,27 +129,24 @@ BOOT_CODE static bool_t insert_region(region_t reg)
     return false;
 }
 
-BOOT_CODE static pptr_t alloc_rootserver_obj(word_t size_bits, word_t n)
-{
+BOOT_CODE static pptr_t alloc_rootserver_obj(word_t size_bits, word_t n) {
     pptr_t allocated = rootserver_mem.start;
     /* allocated memory must be aligned */
     assert(allocated % BIT(size_bits) == 0);
     rootserver_mem.start += (n * BIT(size_bits));
     /* we must not have run out of memory */
     assert(rootserver_mem.start <= rootserver_mem.end);
-    memzero((void *) allocated, n * BIT(size_bits));
+    memzero((void *)allocated, n * BIT(size_bits));
     return allocated;
 }
 
-BOOT_CODE static word_t rootserver_max_size_bits(word_t extra_bi_size_bits)
-{
+BOOT_CODE static word_t rootserver_max_size_bits(word_t extra_bi_size_bits) {
     word_t cnode_size_bits = CONFIG_ROOT_CNODE_SIZE_BITS + seL4_SlotBits;
     word_t max = MAX(cnode_size_bits, seL4_VSpaceBits);
     return MAX(max, extra_bi_size_bits);
 }
 
-BOOT_CODE static word_t calculate_rootserver_size(v_region_t it_v_reg, word_t extra_bi_size_bits)
-{
+BOOT_CODE static word_t calculate_rootserver_size(v_region_t it_v_reg, word_t extra_bi_size_bits) {
     /* work out how much memory we need for root server objects */
     word_t size = BIT(CONFIG_ROOT_CNODE_SIZE_BITS + seL4_SlotBits);
     size += BIT(seL4_TCBBits); // root thread tcb
@@ -168,8 +162,7 @@ BOOT_CODE static word_t calculate_rootserver_size(v_region_t it_v_reg, word_t ex
     return size + arch_get_n_paging(it_v_reg) * BIT(seL4_PageTableBits);
 }
 
-BOOT_CODE static void maybe_alloc_extra_bi(word_t cmp_size_bits, word_t extra_bi_size_bits)
-{
+BOOT_CODE static void maybe_alloc_extra_bi(word_t cmp_size_bits, word_t extra_bi_size_bits) {
     if (extra_bi_size_bits >= cmp_size_bits && rootserver.extra_bi == 0) {
         rootserver.extra_bi = alloc_rootserver_obj(extra_bi_size_bits, 1);
     }
@@ -179,8 +172,7 @@ BOOT_CODE static void maybe_alloc_extra_bi(word_t cmp_size_bits, word_t extra_bi
  * to cover the virtual memory region v_reg, and any extra boot info.
  */
 BOOT_CODE static void create_rootserver_objects(pptr_t start, v_region_t it_v_reg,
-                                                word_t extra_bi_size_bits)
-{
+    word_t extra_bi_size_bits) {
     /* the largest object the PD, the root cnode, or the extra boot info */
     word_t cnode_size_bits = CONFIG_ROOT_CNODE_SIZE_BITS + seL4_SlotBits;
     word_t max = rootserver_max_size_bits(extra_bi_size_bits);
@@ -233,8 +225,7 @@ BOOT_CODE static void create_rootserver_objects(pptr_t start, v_region_t it_v_re
     assert(rootserver_mem.start == rootserver_mem.end);
 }
 
-BOOT_CODE void write_slot(slot_ptr_t slot_ptr, cap_t cap)
-{
+BOOT_CODE void write_slot(slot_ptr_t slot_ptr, cap_t cap) {
     slot_ptr->cap = cap;
 
     slot_ptr->cteMDBNode = nullMDBNode;
@@ -246,18 +237,17 @@ BOOT_CODE void write_slot(slot_ptr_t slot_ptr, cap_t cap)
  * cover all of memory.
  */
 compile_assert(root_cnode_size_valid,
-               CONFIG_ROOT_CNODE_SIZE_BITS < 32 - seL4_SlotBits &&
-               BIT(CONFIG_ROOT_CNODE_SIZE_BITS) >= seL4_NumInitialCaps &&
-               BIT(CONFIG_ROOT_CNODE_SIZE_BITS) >= (seL4_PageBits - seL4_SlotBits))
+    CONFIG_ROOT_CNODE_SIZE_BITS < 32 - seL4_SlotBits &&
+    BIT(CONFIG_ROOT_CNODE_SIZE_BITS) >= seL4_NumInitialCaps &&
+    BIT(CONFIG_ROOT_CNODE_SIZE_BITS) >= (seL4_PageBits - seL4_SlotBits))
 
-BOOT_CODE cap_t
-create_root_cnode(void)
-{
+    BOOT_CODE cap_t
+    create_root_cnode(void) {
     cap_t cap = cap_cnode_cap_new(
-                    CONFIG_ROOT_CNODE_SIZE_BITS, /* radix */
-                    wordBits - CONFIG_ROOT_CNODE_SIZE_BITS, /* guard size */
-                    0, /* guard */
-                    rootserver.cnode); /* pptr */
+        CONFIG_ROOT_CNODE_SIZE_BITS, /* radix */
+        wordBits - CONFIG_ROOT_CNODE_SIZE_BITS, /* guard size */
+        0, /* guard */
+        rootserver.cnode); /* pptr */
 
     /* write the root CNode cap into the root CNode */
     write_slot(SLOT_PTR(rootserver.cnode, seL4_CapInitThreadCNode), cap);
@@ -267,13 +257,12 @@ create_root_cnode(void)
 
 /* Check domain scheduler assumptions. */
 compile_assert(num_domains_valid,
-               CONFIG_NUM_DOMAINS >= 1 && CONFIG_NUM_DOMAINS <= 256)
-compile_assert(num_priorities_valid,
-               CONFIG_NUM_PRIORITIES >= 1 && CONFIG_NUM_PRIORITIES <= 256)
+    CONFIG_NUM_DOMAINS >= 1 && CONFIG_NUM_DOMAINS <= 256)
+    compile_assert(num_priorities_valid,
+        CONFIG_NUM_PRIORITIES >= 1 && CONFIG_NUM_PRIORITIES <= 256)
 
-BOOT_CODE void
-create_domain_cap(cap_t root_cnode_cap)
-{
+    BOOT_CODE void
+    create_domain_cap(cap_t root_cnode_cap) {
     /* Check domain scheduler assumptions. */
     assert(ksDomScheduleLength > 0);
     for (word_t i = 0; i < ksDomScheduleLength; i++) {
@@ -285,8 +274,7 @@ create_domain_cap(cap_t root_cnode_cap)
     write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapDomain), cap);
 }
 
-BOOT_CODE cap_t create_ipcbuf_frame_cap(cap_t root_cnode_cap, cap_t pd_cap, vptr_t vptr)
-{
+BOOT_CODE cap_t create_ipcbuf_frame_cap(cap_t root_cnode_cap, cap_t pd_cap, vptr_t vptr) {
     clearMemory((void *)rootserver.ipc_buf, PAGE_BITS);
 
     /* create a cap of it and write it into the root CNode */
@@ -296,15 +284,13 @@ BOOT_CODE cap_t create_ipcbuf_frame_cap(cap_t root_cnode_cap, cap_t pd_cap, vptr
     return cap;
 }
 
-BOOT_CODE void create_bi_frame_cap(cap_t root_cnode_cap, cap_t pd_cap, vptr_t vptr)
-{
+BOOT_CODE void create_bi_frame_cap(cap_t root_cnode_cap, cap_t pd_cap, vptr_t vptr) {
     /* create a cap of it and write it into the root CNode */
     cap_t cap = create_mapped_it_frame_cap(pd_cap, rootserver.boot_info, vptr, IT_ASID, false, false);
     write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapBootInfoFrame), cap);
 }
 
-BOOT_CODE word_t calculate_extra_bi_size_bits(word_t extra_size)
-{
+BOOT_CODE word_t calculate_extra_bi_size_bits(word_t extra_size) {
     if (extra_size == 0) {
         return 0;
     }
@@ -321,13 +307,12 @@ BOOT_CODE word_t calculate_extra_bi_size_bits(word_t extra_size)
 }
 
 BOOT_CODE void populate_bi_frame(node_id_t node_id, word_t num_nodes,
-                                 vptr_t ipcbuf_vptr, word_t extra_bi_size)
-{
+    vptr_t ipcbuf_vptr, word_t extra_bi_size) {
     /* clear boot info memory */
     clearMemory((void *)rootserver.boot_info, BI_FRAME_SIZE_BITS);
     if (extra_bi_size) {
-        clearMemory((void *)rootserver.extra_bi, 
-                    calculate_extra_bi_size_bits(extra_bi_size));
+        clearMemory((void *)rootserver.extra_bi,
+            calculate_extra_bi_size_bits(extra_bi_size));
     }
 
     /* initialise bootinfo-related global state */
@@ -344,12 +329,11 @@ BOOT_CODE void populate_bi_frame(node_id_t node_id, word_t num_nodes,
     ndks_boot.slot_pos_cur = seL4_NumInitialCaps;
 }
 
-BOOT_CODE bool_t provide_cap(cap_t root_cnode_cap, cap_t cap)
-{
+BOOT_CODE bool_t provide_cap(cap_t root_cnode_cap, cap_t cap) {
     if (ndks_boot.slot_pos_cur >= BIT(CONFIG_ROOT_CNODE_SIZE_BITS)) {
         printf("ERROR: can't add another cap, all %"SEL4_PRIu_word
-               " (=2^CONFIG_ROOT_CNODE_SIZE_BITS) slots used\n",
-               BIT(CONFIG_ROOT_CNODE_SIZE_BITS));
+            " (=2^CONFIG_ROOT_CNODE_SIZE_BITS) slots used\n",
+            BIT(CONFIG_ROOT_CNODE_SIZE_BITS));
         return false;
     }
     write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), ndks_boot.slot_pos_cur), cap);
@@ -363,8 +347,7 @@ BOOT_CODE create_frames_of_region_ret_t create_frames_of_region(
     region_t reg,
     bool_t   do_map,
     sword_t  pv_offset
-)
-{
+) {
     pptr_t     f;
     cap_t      frame_cap;
     seL4_SlotPos slot_pos_before;
@@ -380,8 +363,8 @@ BOOT_CODE create_frames_of_region_ret_t create_frames_of_region(
         }
         if (!provide_cap(root_cnode_cap, frame_cap)) {
             return (create_frames_of_region_ret_t) {
-                .region  = S_REG_EMPTY,
-                .success = false
+                .region = S_REG_EMPTY,
+                    .success = false
             };
         }
     }
@@ -389,16 +372,15 @@ BOOT_CODE create_frames_of_region_ret_t create_frames_of_region(
     slot_pos_after = ndks_boot.slot_pos_cur;
 
     return (create_frames_of_region_ret_t) {
-        .region = (seL4_SlotRegion) {
+        .region = (seL4_SlotRegion){
             .start = slot_pos_before,
-            .end   = slot_pos_after
+            .end = slot_pos_after
         },
-        .success = true
+            .success = true
     };
 }
 
-BOOT_CODE cap_t create_it_asid_pool(cap_t root_cnode_cap)
-{
+BOOT_CODE cap_t create_it_asid_pool(cap_t root_cnode_cap) {
     cap_t ap_cap = cap_asid_pool_cap_new(IT_ASID >> asidLowBits, rootserver.asid_pool);
     write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapInitThreadASIDPool), ap_cap);
 
@@ -412,15 +394,13 @@ BOOT_CODE cap_t create_it_asid_pool(cap_t root_cnode_cap)
 }
 
 #ifdef CONFIG_KERNEL_MCS 
-BOOT_CODE static void configure_sched_context(tcb_t *tcb, sched_context_t *sc_pptr, ticks_t timeslice)
-{
+BOOT_CODE static void configure_sched_context(tcb_t *tcb, sched_context_t *sc_pptr, ticks_t timeslice) {
     tcb->tcbSchedContext = sc_pptr;
     refill_new(tcb->tcbSchedContext, MIN_REFILLS, timeslice, 0);
     tcb->tcbSchedContext->scTcb = tcb;
 }
 
-BOOT_CODE bool_t init_sched_control(cap_t root_cnode_cap, word_t num_nodes)
-{
+BOOT_CODE bool_t init_sched_control(cap_t root_cnode_cap, word_t num_nodes) {
     seL4_SlotPos slot_pos_before = ndks_boot.slot_pos_cur;
 
     /* create a sched control cap for each core */
@@ -432,7 +412,7 @@ BOOT_CODE bool_t init_sched_control(cap_t root_cnode_cap, word_t num_nodes)
     }
 
     /* update boot info with slot region for sched control caps */
-    ndks_boot.bi_frame->schedcontrol = (seL4_SlotRegion) {
+    ndks_boot.bi_frame->schedcontrol = (seL4_SlotRegion){
         .start = slot_pos_before,
         .end = ndks_boot.slot_pos_cur
     };
@@ -441,14 +421,13 @@ BOOT_CODE bool_t init_sched_control(cap_t root_cnode_cap, word_t num_nodes)
 }
 #endif
 
-BOOT_CODE void create_idle_thread(void)
-{
+BOOT_CODE void create_idle_thread(void) {
     pptr_t pptr;
 
 #ifdef ENABLE_SMP_SUPPORT
     for (unsigned int i = 0; i < CONFIG_MAX_NUM_NODES; i++) {
 #endif /* ENABLE_SMP_SUPPORT */
-        pptr = (pptr_t) &ksIdleThreadTCB[SMP_TERNARY(i, 0)];
+        pptr = (pptr_t)&ksIdleThreadTCB[SMP_TERNARY(i, 0)];
         NODE_STATE_ON_CORE(ksIdleThread, i) = TCB_PTR(pptr + TCB_OFFSET);
         configureIdleThread(NODE_STATE_ON_CORE(ksIdleThread, i));
 #ifdef CONFIG_DEBUG_BUILD
@@ -457,9 +436,9 @@ BOOT_CODE void create_idle_thread(void)
         SMP_COND_STATEMENT(NODE_STATE_ON_CORE(ksIdleThread, i)->tcbAffinity = i);
 #ifdef CONFIG_KERNEL_MCS
         configure_sched_context(NODE_STATE_ON_CORE(ksIdleThread, i), SC_PTR(&ksIdleThreadSC[SMP_TERNARY(i, 0)]),
-                                usToTicks(CONFIG_BOOT_THREAD_TIME_SLICE * US_IN_MS));
+            usToTicks(CONFIG_BOOT_THREAD_TIME_SLICE * US_IN_MS));
         SMP_COND_STATEMENT(NODE_STATE_ON_CORE(ksIdleThread, i)->tcbSchedContext->scCore = i;)
-        NODE_STATE_ON_CORE(ksIdleSC, i) = SC_PTR(&ksIdleThreadSC[SMP_TERNARY(i, 0)]);
+            NODE_STATE_ON_CORE(ksIdleSC, i) = SC_PTR(&ksIdleThreadSC[SMP_TERNARY(i, 0)]);
 #endif
 #ifdef ENABLE_SMP_SUPPORT
     }
@@ -545,8 +524,7 @@ BOOT_CODE void create_idle_thread(void)
 // }
 
 #ifdef ENABLE_SMP_CLOCK_SYNC_TEST_ON_BOOT
-BOOT_CODE void clock_sync_test(void)
-{
+BOOT_CODE void clock_sync_test(void) {
     ticks_t t, t0;
     ticks_t margin = usToTicks(1) + getTimerPrecision();
 
@@ -559,13 +537,12 @@ BOOT_CODE void clock_sync_test(void)
     } while (t0 == t);
     t = getCurrentTime();
     printf("clock_sync_test[%d]: t0 = %"PRIu64", t = %"PRIu64", td = %"PRIi64"\n",
-           (int)getCurrentCPUIndex(), t0, t, t - t0);
+        (int)getCurrentCPUIndex(), t0, t, t - t0);
     assert(t0 <= margin + t && t <= t0 + margin);
 }
 #endif 
 
-BOOT_CODE void init_core_state(tcb_t *scheduler_action)
-{
+BOOT_CODE void init_core_state(tcb_t *scheduler_action) {
 #ifdef CONFIG_HAVE_FPU
     NODE_STATE(ksActiveFPUState) = NULL;
 #endif
@@ -600,8 +577,7 @@ BOOT_CODE void init_core_state(tcb_t *scheduler_action)
  * @return false if the pointer is definitely not in the kernel window, true
  *         otherwise.
  */
-BOOT_CODE static bool_t pptr_in_kernel_window(pptr_t pptr)
-{
+BOOT_CODE static bool_t pptr_in_kernel_window(pptr_t pptr) {
     return pptr >= PPTR_BASE && pptr < PPTR_TOP;
 }
 
@@ -624,15 +600,14 @@ BOOT_CODE static bool_t provide_untyped_cap(
     pptr_t     pptr,
     word_t     size_bits,
     seL4_SlotPos first_untyped_slot
-)
-{
+) {
     bool_t ret;
     cap_t ut_cap;
 
     /* Since we are in boot code, we can do extensive error checking and
        return failure if anything unexpected happens. */
 
-    /* Bounds check for size parameter */
+       /* Bounds check for size parameter */
     if (size_bits > seL4_MaxUntypedBits || size_bits < seL4_MinUntypedBits) {
         printf("Kernel init: Invalid untyped size %"SEL4_PRIu_word"\n", size_bits);
         return false;
@@ -647,7 +622,7 @@ BOOT_CODE static bool_t provide_untyped_cap(
     /* All cap ptrs apart from device untypeds must be in the kernel window. */
     if (!device_memory && !pptr_in_kernel_window(pptr)) {
         printf("Kernel init: Non-device untyped pptr %p outside kernel window\n",
-               (void *)pptr);
+            (void *)pptr);
         return false;
     }
 
@@ -656,20 +631,20 @@ BOOT_CODE static bool_t provide_untyped_cap(
        seL4_MaxUntypedBits. */
     if (!device_memory && !pptr_in_kernel_window(pptr + MASK(size_bits))) {
         printf("Kernel init: End of non-device untyped at %p outside kernel window (size %"SEL4_PRIu_word")\n",
-               (void *)pptr, size_bits);
+            (void *)pptr, size_bits);
         return false;
     }
 
     word_t i = ndks_boot.slot_pos_cur - first_untyped_slot;
     if (i < CONFIG_MAX_NUM_BOOTINFO_UNTYPED_CAPS) {
-        ndks_boot.bi_frame->untypedList[i] = (seL4_UntypedDesc) {
-            .paddr    = pptr_to_paddr((void *)pptr),
+        ndks_boot.bi_frame->untypedList[i] = (seL4_UntypedDesc){
+            .paddr = pptr_to_paddr((void *)pptr),
             .sizeBits = size_bits,
             .isDevice = device_memory,
-            .padding  = {0}
+            .padding = {0}
         };
         ut_cap = cap_untyped_cap_new(MAX_FREE_INDEX(size_bits),
-                                     device_memory, size_bits, pptr);
+            device_memory, size_bits, pptr);
         ret = provide_cap(root_cnode_cap, ut_cap);
     } else {
         printf("Kernel init: Too many untyped regions for boot info\n");
@@ -693,13 +668,12 @@ BOOT_CODE static bool_t provide_untyped_cap(
  * @param first_untyped_slot First available untyped boot info slot.
  * @return true on success, false on failure.
  */
-BOOT_CODE static bool_t create_untypeds_for_region(
+BOOT_CODE bool_t create_untypeds_for_region(
     cap_t      root_cnode_cap,
     bool_t     device_memory,
     region_t   reg,
     seL4_SlotPos first_untyped_slot
-)
-{
+) {
     /* This code works with regions that wrap (where end < start), because the loop cuts up the
        region into size-aligned chunks, one for each cap. Memory chunks that are size-aligned cannot
        themselves overflow, so they satisfy alignement, size, and overflow conditionds. The region
@@ -740,20 +714,18 @@ BOOT_CODE static bool_t create_untypeds_for_region(
 }
 
 BOOT_CODE bool_t create_untypeds(cap_t root_cnode_cap,
-                                 region_t boot_mem_reuse_reg)
-{
-    seL4_SlotPos first_untyped_slot = ndks_boot.slot_pos_cur;
+    region_t boot_mem_reuse_reg, seL4_SlotPos first_untyped_slot) {
 
     paddr_t start = 0;
     for (word_t i = 0; i < ndks_boot.resv_count; i++) {
         if (start < ndks_boot.reserved[i].start) {
             region_t reg = paddr_to_pptr_reg((p_region_t) {
                 start, ndks_boot.reserved[i].start
-            }); 
+            });
             if (!create_untypeds_for_region(root_cnode_cap, true, reg, first_untyped_slot)) {
                 printf("ERROR: creation of untypeds for device region #%u at"
-                       " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"] failed\n",
-                       (unsigned int)i, reg.start, reg.end);
+                    " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"] failed\n",
+                    (unsigned int)i, reg.start, reg.end);
                 return false;
             }
         }
@@ -768,8 +740,8 @@ BOOT_CODE bool_t create_untypeds(cap_t root_cnode_cap,
 
         if (!create_untypeds_for_region(root_cnode_cap, true, reg, first_untyped_slot)) {
             printf("ERROR: creation of untypeds for top device region"
-                   " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"] failed\n",
-                   reg.start, reg.end);
+                " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"] failed\n",
+                reg.start, reg.end);
             return false;
         }
     }
@@ -777,8 +749,8 @@ BOOT_CODE bool_t create_untypeds(cap_t root_cnode_cap,
     /* if boot_mem_reuse_reg is not empty, we can create UT objs from boot code/data frames */
     if (!create_untypeds_for_region(root_cnode_cap, false, boot_mem_reuse_reg, first_untyped_slot)) {
         printf("ERROR: creation of untypeds for recycled boot memory"
-               " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"] failed\n",
-               boot_mem_reuse_reg.start, boot_mem_reuse_reg.end);
+            " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"] failed\n",
+            boot_mem_reuse_reg.start, boot_mem_reuse_reg.end);
         return false;
     }
 
@@ -788,30 +760,28 @@ BOOT_CODE bool_t create_untypeds(cap_t root_cnode_cap,
         ndks_boot.freemem[i] = REG_EMPTY;
         if (!create_untypeds_for_region(root_cnode_cap, false, reg, first_untyped_slot)) {
             printf("ERROR: creation of untypeds for free memory region #%u at"
-                   " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"] failed\n",
-                   (unsigned int)i, reg.start, reg.end);
+                " [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"] failed\n",
+                (unsigned int)i, reg.start, reg.end);
             return false;
         }
     }
 
-    ndks_boot.bi_frame->untyped = (seL4_SlotRegion) {
+    ndks_boot.bi_frame->untyped = (seL4_SlotRegion){
         .start = first_untyped_slot,
-        .end   = ndks_boot.slot_pos_cur
+        .end = ndks_boot.slot_pos_cur
     };
 
     return true;
 }
 
-BOOT_CODE void bi_finalise(void)
-{
-    ndks_boot.bi_frame->empty = (seL4_SlotRegion) {
+BOOT_CODE void bi_finalise(void) {
+    ndks_boot.bi_frame->empty = (seL4_SlotRegion){
         .start = ndks_boot.slot_pos_cur,
-        .end   = BIT(CONFIG_ROOT_CNODE_SIZE_BITS)
+        .end = BIT(CONFIG_ROOT_CNODE_SIZE_BITS)
     };
 }
 
-BOOT_CODE static inline pptr_t ceiling_kernel_window(pptr_t p)
-{
+BOOT_CODE static inline pptr_t ceiling_kernel_window(pptr_t p) {
     /* Adjust address if it exceeds the kernel window
      * Note that we compare physical address in case of overflow.
      */
@@ -822,8 +792,7 @@ BOOT_CODE static inline pptr_t ceiling_kernel_window(pptr_t p)
 }
 
 BOOT_CODE static bool_t check_available_memory(word_t n_available,
-                                               const p_region_t *available)
-{
+    const p_region_t *available) {
     /* The system configuration is broken if no region is available. */
     if (0 == n_available) {
         printf("ERROR: no memory regions available\n");
@@ -832,14 +801,14 @@ BOOT_CODE static bool_t check_available_memory(word_t n_available,
 
     printf("available phys memory regions: %"SEL4_PRIu_word"\n", n_available);
     /* Force ordering and exclusivity of available regions. */
-    for (word_t i = 0; i < n_available; i++) { 
+    for (word_t i = 0; i < n_available; i++) {
         const p_region_t *r = &available[i];
         printf("  [%"SEL4_PRIx_word"..%"SEL4_PRIx_word"]\n", r->start, r->end);
 
         /* Available regions must be sane */
         if (r->start > r->end) {
             printf("ERROR: memory region %"SEL4_PRIu_word" has start > end\n", i);
-            return false; 
+            return false;
         }
 
         /* Available regions can't be empty. */
@@ -861,10 +830,9 @@ BOOT_CODE static bool_t check_available_memory(word_t n_available,
 
 
 BOOT_CODE static bool_t check_reserved_memory(word_t n_reserved,
-                                              const region_t *reserved)
-{
+    const region_t *reserved) {
     printf("reserved virt address space regions: %"SEL4_PRIu_word"\n",
-           n_reserved);
+        n_reserved);
     /* Force ordering and exclusivity of reserved regions. */
     for (word_t i = 0; i < n_reserved; i++) {
         const region_t *r = &reserved[i];
@@ -895,9 +863,8 @@ BOOT_BSS static region_t avail_reg[MAX_NUM_FREEMEM_REG];
  * A region represents an area of memory.
  */
 BOOT_CODE bool_t init_freemem(word_t n_available, const p_region_t *available,
-                              word_t n_reserved, const region_t *reserved,
-                              v_region_t it_v_reg, word_t extra_bi_size_bits)
-{
+    word_t n_reserved, const region_t *reserved,
+    v_region_t it_v_reg, word_t extra_bi_size_bits) {
 
     if (!check_available_memory(n_available, available)) {
         return false;
@@ -979,7 +946,7 @@ BOOT_CODE bool_t init_freemem(word_t n_available, const p_region_t *available,
     int i = ARRAY_SIZE(ndks_boot.freemem) - 1;
     if (!is_reg_empty(ndks_boot.freemem[i])) {
         printf("ERROR: insufficient MAX_NUM_FREEMEM_REG (%u)\n",
-               (unsigned int)MAX_NUM_FREEMEM_REG);
+            (unsigned int)MAX_NUM_FREEMEM_REG);
         return false;
     }
     /* skip any empty regions */
@@ -999,9 +966,9 @@ BOOT_CODE bool_t init_freemem(word_t n_available, const p_region_t *available,
         /* Invariant: regions above (i + 1), if any, are empty or too small to use.
          * Invariant: all non-empty regions are ordered, disjoint and unallocated. */
 
-        /* We make a fresh variable to index the known-empty region, because the
-         * SimplExportAndRefine verification test has poor support for array
-         * indices that are sums of variables and small constants. */
+         /* We make a fresh variable to index the known-empty region, because the
+          * SimplExportAndRefine verification test has poor support for array
+          * indices that are sums of variables and small constants. */
         int empty_index = i + 1;
 
         /* Try to take the top-most suitably sized and aligned chunk. */
@@ -1014,7 +981,7 @@ BOOT_CODE bool_t init_freemem(word_t n_available, const p_region_t *available,
             create_rootserver_objects(start, it_v_reg, extra_bi_size_bits);
             /* There may be leftovers before and after the memory we used. */
             /* Shuffle the after leftover up to the empty slot (i + 1). */
-            ndks_boot.freemem[empty_index] = (region_t) {
+            ndks_boot.freemem[empty_index] = (region_t){
                 .start = start + size,
                 .end = ndks_boot.freemem[i].end
             };
@@ -1034,6 +1001,6 @@ BOOT_CODE bool_t init_freemem(word_t n_available, const p_region_t *available,
 
     /* We didn't find a big enough region. */
     printf("ERROR: no free memory region is big enough for root server "
-           "objects, need size/alignment of 2^%"SEL4_PRIu_word"\n", max);
+        "objects, need size/alignment of 2^%"SEL4_PRIu_word"\n", max);
     return false;
 }

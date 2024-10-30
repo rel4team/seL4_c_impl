@@ -29,18 +29,18 @@
 #endif
 
 #ifdef ENABLE_SMP_SUPPORT
-/* sync variable to prevent other nodes from booting
- * until kernel data structures initialized */
+ /* sync variable to prevent other nodes from booting
+  * until kernel data structures initialized */
 BOOT_BSS static volatile int node_boot_lock;
 #endif /* ENABLE_SMP_SUPPORT */
 
 BOOT_BSS static region_t reserved[NUM_RESERVED_REGIONS];
 
 BOOT_CODE static bool_t arch_init_freemem(p_region_t ui_p_reg,
-                                          p_region_t dtb_p_reg,
-                                          v_region_t it_v_reg,
-                                          word_t extra_bi_size_bits)
-{
+    p_region_t dtb_p_reg,
+    p_region_t extra_device_p_reg,
+    v_region_t it_v_reg,
+    word_t extra_bi_size_bits) {
     /* reserve the kernel image region */
     reserved[0].start = KERNEL_ELF_BASE;
     reserved[0].end = (pptr_t)ki_end;
@@ -53,8 +53,15 @@ BOOT_CODE static bool_t arch_init_freemem(p_region_t ui_p_reg,
             printf("ERROR: no slot to add DTB to reserved regions\n");
             return false;
         }
-        reserved[index].start = (pptr_t) paddr_to_pptr(dtb_p_reg.start);
-        reserved[index].end = (pptr_t) paddr_to_pptr(dtb_p_reg.end);
+        reserved[index].start = (pptr_t)paddr_to_pptr(dtb_p_reg.start);
+        reserved[index].end = (pptr_t)paddr_to_pptr(dtb_p_reg.end);
+        index++;
+    }
+
+    if (extra_device_p_reg.start) {
+        /* the dtb region could be empty */
+        reserved[index].start = (pptr_t)paddr_to_pptr(extra_device_p_reg.start);
+        reserved[index].end = (pptr_t)paddr_to_pptr(extra_device_p_reg.end);
         index++;
     }
 
@@ -71,7 +78,7 @@ BOOT_CODE static bool_t arch_init_freemem(p_region_t ui_p_reg,
         if (MODE_RESERVED == 1) {
             if (index + 1 >= ARRAY_SIZE(reserved)) {
                 printf("ERROR: no slot to add the user image and the "
-                       "mode-reserved region to the reserved regions\n");
+                    "mode-reserved region to the reserved regions\n");
                 return false;
             }
             if (ui_reg.end > mode_reserved_region[0].start) {
@@ -87,7 +94,7 @@ BOOT_CODE static bool_t arch_init_freemem(p_region_t ui_p_reg,
         } else {
             if (index >= ARRAY_SIZE(reserved)) {
                 printf("ERROR: no slot to add the user image to the reserved"
-                       "regions\n");
+                    "regions\n");
                 return false;
             }
             reserved[index] = ui_reg;
@@ -109,16 +116,15 @@ BOOT_CODE static bool_t arch_init_freemem(p_region_t ui_p_reg,
 
     /* avail_p_regs comes from the auto-generated code */
     return init_freemem(ARRAY_SIZE(avail_p_regs), avail_p_regs,
-                        index, reserved,
-                        it_v_reg, extra_bi_size_bits);
+        index, reserved,
+        it_v_reg, extra_bi_size_bits);
 }
 
 
-BOOT_CODE void init_irqs(cap_t root_cnode_cap)
-{
+BOOT_CODE void init_irqs(cap_t root_cnode_cap) {
     unsigned i;
 
-    for (i = 0; i <= maxIRQ ; i++) {
+    for (i = 0; i <= maxIRQ; i++) {
         setIRQState(IRQInactive, CORE_IRQ_TO_IRQT(0, i));
     }
     setIRQState(IRQTimer, CORE_IRQ_TO_IRQT(0, KERNEL_TIMER_IRQ));
@@ -134,7 +140,7 @@ BOOT_CODE void init_irqs(cap_t root_cnode_cap)
 #ifdef KERNEL_PMU_IRQ
     setIRQState(IRQReserved, CORE_IRQ_TO_IRQT(0, KERNEL_PMU_IRQ));
 #if (defined CONFIG_PLAT_TX1 && defined ENABLE_SMP_SUPPORT)
-//SELFOUR-1252
+    //SELFOUR-1252
 #error "This platform doesn't support tracking CPU utilisation on multicore"
 #endif /* CONFIG_PLAT_TX1 && ENABLE_SMP_SUPPORT */
 #else
@@ -152,8 +158,7 @@ BOOT_CODE void init_irqs(cap_t root_cnode_cap)
 }
 
 #ifdef CONFIG_ARM_SMMU
-BOOT_CODE static void init_smmu(cap_t root_cnode_cap)
-{
+BOOT_CODE static void init_smmu(cap_t root_cnode_cap) {
     plat_smmu_init();
     /*provide the SID and CB control cap*/
     write_slot(SLOT_PTR(pptr_of_cap(root_cnode_cap), seL4_CapSMMUSIDControl), cap_sid_control_cap_new());
@@ -167,8 +172,7 @@ BOOT_CODE static void init_smmu(cap_t root_cnode_cap)
  * It does NOT initialise any kernel state.
  * @return For the verification build, this currently returns true always.
  */
-BOOT_CODE bool_t init_cpu(void)
-{
+BOOT_CODE bool_t init_cpu(void) {
     bool_t haveHWFPU;
 
 #ifdef CONFIG_ARCH_AARCH64
@@ -187,7 +191,7 @@ BOOT_CODE bool_t init_cpu(void)
 #ifdef CONFIG_HARDWARE_DEBUG_API
     if (!Arch_initHardwareBreakpoints()) {
         printf("Kernel built with CONFIG_HARDWARE_DEBUG_API, but this board doesn't "
-               "reliably support it.\n");
+            "reliably support it.\n");
         return false;
     }
 #endif
@@ -195,7 +199,7 @@ BOOT_CODE bool_t init_cpu(void)
     /* Setup kernel stack pointer.
      * On ARM SMP, the array index here is the CPU ID
      */
-    word_t stack_top = ((word_t) kernel_stack_alloc[CURRENT_CPU_INDEX()]) + BIT(CONFIG_KERNEL_STACK_BITS);
+    word_t stack_top = ((word_t)kernel_stack_alloc[CURRENT_CPU_INDEX()]) + BIT(CONFIG_KERNEL_STACK_BITS);
 #if defined(ENABLE_SMP_SUPPORT) && defined(CONFIG_ARCH_AARCH64)
     /* the least 12 bits are used to store logical core ID */
     stack_top |= getCurrentCPUIndex();
@@ -241,8 +245,7 @@ BOOT_CODE bool_t init_cpu(void)
 
 /* This and only this function initialises the platform. It does NOT initialise any kernel state. */
 
-BOOT_CODE void init_plat(void)
-{
+BOOT_CODE void init_plat(void) {
     initIRQController();
     initL2Cache();
 #ifdef CONFIG_ARM_SMMU
@@ -251,8 +254,7 @@ BOOT_CODE void init_plat(void)
 }
 
 #ifdef ENABLE_SMP_SUPPORT
-BOOT_CODE static bool_t try_init_kernel_secondary_core(void)
-{
+BOOT_CODE static bool_t try_init_kernel_secondary_core(void) {
     unsigned i;
 
     /* need to first wait until some kernel init has been done */
@@ -282,8 +284,7 @@ BOOT_CODE static bool_t try_init_kernel_secondary_core(void)
     return true;
 }
 
-BOOT_CODE static void release_secondary_cpus(void)
-{
+BOOT_CODE static void release_secondary_cpus(void) {
 
     /* release the cpus at the same time */
     node_boot_lock = 1;
@@ -320,7 +321,9 @@ static BOOT_CODE bool_t try_init_kernel(
     sword_t pv_offset,
     vptr_t  v_entry,
     paddr_t dtb_phys_addr,
-    word_t  dtb_size
+    word_t  dtb_size,
+    paddr_t extra_device_addr_start,
+    word_t extra_device_size
 );
 // static BOOT_CODE bool_t try_init_kernel(
 //     paddr_t ui_p_reg_start,
@@ -629,7 +632,9 @@ bool_t rust_try_init_kernel(
     sword_t pv_offset,
     vptr_t v_entry,
     paddr_t dtb_phys_addr,
-    word_t dtb_size);
+    word_t  dtb_size,
+    paddr_t extra_device_addr_start,
+    word_t extra_device_size);
 void pRegsToR(word_t *, word_t);
 
 BOOT_CODE VISIBLE void init_kernel(
@@ -638,9 +643,10 @@ BOOT_CODE VISIBLE void init_kernel(
     sword_t pv_offset,
     vptr_t  v_entry,
     paddr_t dtb_addr_p,
-    uint32_t dtb_size
-)
-{
+    uint64_t dtb_size,
+    paddr_t extra_device_addr_p,
+    uint64_t extra_device_size
+) {
     bool_t result;
     // FIXME: Don't use printf in the here
     // Just for testing, remove it when fix pl011 PPTR address
@@ -650,20 +656,22 @@ BOOT_CODE VISIBLE void init_kernel(
     /* we assume there exists a cpu with id 0 and will use it for bootstrapping */
     if (getCurrentCPUIndex() == 0) {
         result = try_init_kernel(ui_p_reg_start,
-                                 ui_p_reg_end,
-                                 pv_offset,
-                                 v_entry,
-                                 dtb_addr_p, dtb_size);
+            ui_p_reg_end,
+            pv_offset,
+            v_entry,
+            dtb_addr_p, dtb_size,
+            extra_device_addr_p, extra_device_size);
     } else {
         result = try_init_kernel_secondary_core();
     }
 
 #else
     result = rust_try_init_kernel(ui_p_reg_start,
-                             ui_p_reg_end,
-                             pv_offset,
-                             v_entry,
-                             dtb_addr_p, dtb_size);
+        ui_p_reg_end,
+        pv_offset,
+        v_entry,
+        dtb_addr_p, dtb_size,
+        extra_device_addr_p, extra_device_size);
 
 #endif /* ENABLE_SMP_SUPPORT */
 
