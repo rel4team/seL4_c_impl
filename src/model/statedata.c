@@ -93,7 +93,7 @@ extern dom_t ksCurDomain;
 
 /* Domain timeslice remaining */
 #ifdef CONFIG_KERNEL_MCS
-ticks_t ksDomainTime;
+extern ticks_t ksDomainTime;
 #else
 extern word_t ksDomainTime;
 #endif

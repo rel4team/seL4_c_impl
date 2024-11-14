@@ -17,16 +17,16 @@
 #include <object/notification.h>
 
 
-tcb_queue_t PURE ntfn_ptr_get_queue(notification_t *ntfnPtr);
-// static inline tcb_queue_t PURE ntfn_ptr_get_queue(notification_t *ntfnPtr)
-// {
-//     tcb_queue_t ntfn_queue; 
+// tcb_queue_t PURE ntfn_ptr_get_queue(notification_t *ntfnPtr);
+static inline tcb_queue_t PURE ntfn_ptr_get_queue(notification_t *ntfnPtr)
+{
+    tcb_queue_t ntfn_queue; 
 
-//     ntfn_queue.head = (tcb_t *)notification_ptr_get_ntfnQueue_head(ntfnPtr);
-//     ntfn_queue.end = (tcb_t *)notification_ptr_get_ntfnQueue_tail(ntfnPtr);
-//     printf("not val %llx %llx\n",(unsigned long long)ntfn_queue.head,(unsigned long long)ntfn_queue.end);
-//     return ntfn_queue;
-// }
+    ntfn_queue.head = (tcb_t *)notification_ptr_get_ntfnQueue_head(ntfnPtr);
+    ntfn_queue.end = (tcb_t *)notification_ptr_get_ntfnQueue_tail(ntfnPtr);
+    printf("not val %llx %llx\n",(unsigned long long)ntfn_queue.head,(unsigned long long)ntfn_queue.end);
+    return ntfn_queue;
+}
 //  void ntfn_ptr_set_queue(notification_t *ntfnPtr, tcb_queue_t ntfn_queue);
 static inline void ntfn_ptr_set_queue(notification_t *ntfnPtr, tcb_queue_t ntfn_queue)
 {

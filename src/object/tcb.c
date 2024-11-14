@@ -243,22 +243,22 @@ void tcbDebugRemove(tcb_t *tcb)
 #endif
 
 /* Remove TCB from an endpoint queue */
-// tcb_queue_t tcbEPDequeue(tcb_t *tcb, tcb_queue_t queue)
-// {
-//     if (tcb->tcbEPPrev) {
-//         tcb->tcbEPPrev->tcbEPNext = tcb->tcbEPNext;
-//     } else {
-//         queue.head = tcb->tcbEPNext;
-//     }
+tcb_queue_t tcbEPDequeue(tcb_t *tcb, tcb_queue_t queue)
+{
+    if (tcb->tcbEPPrev) {
+        tcb->tcbEPPrev->tcbEPNext = tcb->tcbEPNext;
+    } else {
+        queue.head = tcb->tcbEPNext;
+    }
 
-//     if (tcb->tcbEPNext) {
-//         tcb->tcbEPNext->tcbEPPrev = tcb->tcbEPPrev;
-//     } else {
-//         queue.end = tcb->tcbEPPrev;
-//     }
+    if (tcb->tcbEPNext) {
+        tcb->tcbEPNext->tcbEPPrev = tcb->tcbEPPrev;
+    } else {
+        queue.end = tcb->tcbEPPrev;
+    }
 
-//     return queue;
-// }
+    return queue;
+}
 
 #ifdef CONFIG_KERNEL_MCS
 void tcbReleaseRemove(tcb_t *tcb)

@@ -12,14 +12,14 @@
 #include <arch/machine.h>
 
 #ifdef CONFIG_KERNEL_MCS
-void handleFault(tcb_t *tptr)
-{
-    bool_t hasFaultHandler = sendFaultIPC(tptr, TCB_PTR_CTE_PTR(tptr, tcbFaultHandler)->cap,
-                                          tptr->tcbSchedContext != NULL);
-    if (!hasFaultHandler) {
-        handleNoFaultHandler(tptr);
-    }
-}
+// void handleFault(tcb_t *tptr)
+// {
+//     bool_t hasFaultHandler = sendFaultIPC(tptr, TCB_PTR_CTE_PTR(tptr, tcbFaultHandler)->cap,
+//                                           tptr->tcbSchedContext != NULL);
+//     if (!hasFaultHandler) {
+//         handleNoFaultHandler(tptr);
+//     }
+// }
 
 void handleTimeout(tcb_t *tptr)
 {
