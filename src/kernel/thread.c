@@ -714,26 +714,26 @@ void chargeBudget(ticks_t consumed, bool_t canTimeoutFault)
     }
 }
 
-void endTimeslice(bool_t can_timeout_fault)
-{
-    if (can_timeout_fault && !isRoundRobin(NODE_STATE(ksCurSC)) && validTimeoutHandler(NODE_STATE(ksCurThread)))
-    {
-        current_fault = seL4_Fault_Timeout_new(NODE_STATE(ksCurSC)->scBadge);
-        handleTimeout(NODE_STATE(ksCurThread));
-    }
-    else if (refill_ready(NODE_STATE(ksCurSC)) && refill_sufficient(NODE_STATE(ksCurSC), 0))
-    {
-        /* apply round robin */
-        assert(refill_sufficient(NODE_STATE(ksCurSC), 0));
-        assert(!thread_state_get_tcbQueued(NODE_STATE(ksCurThread)->tcbState));
-        SCHED_APPEND_CURRENT_TCB;
-    }
-    else
-    {
-        /* postpone until ready */
-        postpone(NODE_STATE(ksCurSC));
-    }
-}
+// void endTimeslice(bool_t can_timeout_fault)
+// {
+//     if (can_timeout_fault && !isRoundRobin(NODE_STATE(ksCurSC)) && validTimeoutHandler(NODE_STATE(ksCurThread)))
+//     {
+//         current_fault = seL4_Fault_Timeout_new(NODE_STATE(ksCurSC)->scBadge);
+//         handleTimeout(NODE_STATE(ksCurThread));
+//     }
+//     else if (refill_ready(NODE_STATE(ksCurSC)) && refill_sufficient(NODE_STATE(ksCurSC), 0))
+//     {
+//         /* apply round robin */
+//         assert(refill_sufficient(NODE_STATE(ksCurSC), 0));
+//         assert(!thread_state_get_tcbQueued(NODE_STATE(ksCurThread)->tcbState));
+//         SCHED_APPEND_CURRENT_TCB;
+//     }
+//     else
+//     {
+//         /* postpone until ready */
+//         postpone(NODE_STATE(ksCurSC));
+//     }
+// }
 #else
 
 // void timerTick(void)
