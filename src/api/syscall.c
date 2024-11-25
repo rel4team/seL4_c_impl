@@ -302,7 +302,8 @@
 // }
 
 #ifdef CONFIG_KERNEL_MCS
-static exception_t handleInvocation(bool_t isCall, bool_t isBlocking, bool_t canDonate, bool_t firstPhase, cptr_t cptr)
+// static exception_t handleInvocation(bool_t isCall, bool_t isBlocking, bool_t canDonate, bool_t firstPhase, cptr_t cptr)
+exception_t handleInvocation(bool_t isCall, bool_t isBlocking, bool_t canDonate, bool_t firstPhase, cptr_t cptr);
 #else
 exception_t handleInvocation(bool_t isCall, bool_t isBlocking);
 // static exception_t handleInvocation(bool_t isCall, bool_t isBlocking)

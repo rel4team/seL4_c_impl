@@ -92,7 +92,8 @@ void remoteTCBStall(tcb_t *tcb);
 
 #ifdef CONFIG_KERNEL_MCS
 /* Add TCB into the priority ordered endpoint queue */
-static inline tcb_queue_t tcbEPAppend(tcb_t *tcb, tcb_queue_t queue)
+// static inline tcb_queue_t tcbEPAppend(tcb_t *tcb, tcb_queue_t queue)
+tcb_queue_t tcbEPAppend(tcb_t *tcb, tcb_queue_t queue)
 {
     /* start at the back of the queue as FIFO is the common case */
     tcb_t *before = queue.end;

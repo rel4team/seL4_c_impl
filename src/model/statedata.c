@@ -34,7 +34,7 @@ extern smpStatedata_t ksSMP[CONFIG_MAX_NUM_NODES];
 compile_assert(ksReadyQueuesL1BitmapBigEnough, (L2_BITMAP_SIZE - 1) <= wordBits)
 #ifdef CONFIG_KERNEL_MCS
 /* Head of the queue of threads waiting for their budget to be replenished */
-UP_STATE_DEFINE(tcb_t *, ksReleaseHead);
+// UP_STATE_DEFINE(tcb_t *, ksReleaseHead);
 #endif
 
 /* Current thread TCB pointer */
@@ -56,14 +56,14 @@ UP_STATE_DEFINE(word_t, ksFPURestoresSinceSwitch);
 #endif /* CONFIG_HAVE_FPU */
 #ifdef CONFIG_KERNEL_MCS
 /* the amount of time passed since the kernel time was last updated */
-UP_STATE_DEFINE(ticks_t, ksConsumed);
+// UP_STATE_DEFINE(ticks_t, ksConsumed);
 /* whether we need to reprogram the timer before exiting the kernel */
-UP_STATE_DEFINE(bool_t, ksReprogram);
+// UP_STATE_DEFINE(bool_t, ksReprogram);
 /* the current kernel time (recorded on kernel entry) */
-UP_STATE_DEFINE(ticks_t, ksCurTime);
+// UP_STATE_DEFINE(ticks_t, ksCurTime);
 /* current scheduling context pointer */
-UP_STATE_DEFINE(sched_context_t *, ksCurSC);
-UP_STATE_DEFINE(sched_context_t *, ksIdleSC);
+// UP_STATE_DEFINE(sched_context_t *, ksCurSC);
+// UP_STATE_DEFINE(sched_context_t *, ksIdleSC);
 #endif
 
 #ifdef CONFIG_DEBUG_BUILD
@@ -93,7 +93,7 @@ extern dom_t ksCurDomain;
 
 /* Domain timeslice remaining */
 #ifdef CONFIG_KERNEL_MCS
-ticks_t ksDomainTime;
+extern ticks_t ksDomainTime;
 #else
 extern word_t ksDomainTime;
 #endif
@@ -109,7 +109,7 @@ word_t tlbLockCount = 0;
 
 #ifdef CONFIG_KERNEL_MCS
 /* Idle thread Schedcontexts */
-char ksIdleThreadSC[CONFIG_MAX_NUM_NODES][BIT(seL4_MinSchedContextBits)] ALIGN(BIT(seL4_MinSchedContextBits));
+// char ksIdleThreadSC[CONFIG_MAX_NUM_NODES][BIT(seL4_MinSchedContextBits)] ALIGN(BIT(seL4_MinSchedContextBits));
 #endif
 
 #if (defined CONFIG_DEBUG_BUILD || defined CONFIG_BENCHMARK_TRACK_KERNEL_ENTRIES)

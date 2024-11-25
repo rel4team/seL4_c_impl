@@ -237,7 +237,11 @@ void NORETURN fastpath_call(word_t cptr, word_t msgInfo);
 // static inline
 // FORCE_INLINE
 // #endif
+#ifdef CONFIG_KERNEL_MCS
+void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo, word_t reply);
+#else
 void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo);
+#endif
 // #ifdef CONFIG_KERNEL_MCS
 // void NORETURN fastpath_reply_recv(word_t cptr, word_t msgInfo, word_t reply)
 // #else
