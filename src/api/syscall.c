@@ -43,7 +43,8 @@ exception_t handleUnknownSyscall(word_t w)
         return EXCEPTION_NONE;
     }
     if (w == SysGetClock) {
-        uint64_t current = riscv_read_time();
+        // uint64_t current = riscv_read_time();
+        uint64_t current = riscv_read_cycle();
         setRegister(NODE_STATE(ksCurThread), capRegister, current);
         return EXCEPTION_NONE;
     }
